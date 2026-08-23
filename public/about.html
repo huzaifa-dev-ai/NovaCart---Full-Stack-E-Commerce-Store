@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — NovaCart</title>
+  <meta name="description" content="The story behind NovaCart — quality products, reliable service, and everyday convenience in one place." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..640;1,9..144,400..640&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============ HEADER / NAVBAR (same as home) ============ -->
+  <header class="site-header" id="siteHeader">
+    <div class="container header__inner">
+
+      <a href="index.html" class="brand" aria-label="NovaCart home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6" />
+            <circle cx="10" cy="20" r="1.4" />
+            <circle cx="18" cy="20" r="1.4" />
+          </svg>
+        </span>
+        <span class="brand__text">Nova<span class="brand__accent">Cart</span></span>
+      </a>
+
+      <nav class="nav" id="primaryNav" aria-label="Primary">
+        <ul class="nav__list">
+          <li><a class="nav__link" href="index.html">Home</a></li>
+          <li><a class="nav__link" href="products.html">Products</a></li>
+          <li><a class="nav__link is-active" href="about.html">About</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__actions">
+        <div class="account" id="accountSlot"></div>
+
+        <a href="cart.html" class="cart-btn" aria-label="View shopping cart">
+          <svg class="cart-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6" />
+            <circle cx="10" cy="20" r="1.4" />
+            <circle cx="18" cy="20" r="1.4" />
+          </svg>
+          <span class="cart-btn__label">Cart</span>
+          <span class="cart-badge" id="cartCount" data-empty="true">0</span>
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primaryNav">
+          <span class="nav-toggle__bar"></span>
+          <span class="nav-toggle__bar"></span>
+          <span class="nav-toggle__bar"></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <span class="page-hero__eyebrow">Our Story</span>
+        <h1 class="page-hero__title">Shopping, without the noise</h1>
+        <p class="page-hero__sub">
+          NovaCart started with a simple frustration: buying good everyday tech
+          shouldn't take twenty tabs and a leap of faith. So we built one place
+          with a curated range, honest pricing and service that actually answers.
+        </p>
+      </div>
+    </section>
+
+    <section class="page-body">
+      <div class="container">
+        <div class="prose">
+          <h2>What we believe</h2>
+          <p>
+            Every product in our catalog earns its place. We test for build quality,
+            we write descriptions like humans, and we would rather stock one great
+            keyboard than ten forgettable ones. If something doesn't hold up, it
+            leaves the store — simple as that.
+          </p>
+        </div>
+
+        <div class="value-cards">
+          <div class="value-card">
+            <span class="feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l8 4v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6z" /><path d="M9 12l2 2 4-4" />
+              </svg>
+            </span>
+            <h3>Curated, not crowded</h3>
+            <p>A tight catalog of products we would buy ourselves — every item hand-picked and tested.</p>
+          </div>
+          <div class="value-card">
+            <span class="feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
+              </svg>
+            </span>
+            <h3>Honest pricing</h3>
+            <p>Fair prices year-round. When something is on sale, it is a real discount from a real price.</p>
+          </div>
+          <div class="value-card">
+            <span class="feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </span>
+            <h3>Humans on support</h3>
+            <p>Questions land with a person, not a phone tree. 24/7, and we answer like we mean it.</p>
+          </div>
+        </div>
+
+        <div class="prose" id="careers">
+          <h2>Careers</h2>
+          <p>
+            We're a small, fully-remote team that cares about craft — in the products
+            we stock and the software we ship. There are no open roles right now, but
+            we're always happy to hear from people who sweat the details. Introduce
+            yourself through the <a href="contact.html"><strong>contact page</strong></a>
+            and tell us what you'd make better.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER (same as home) ============ -->
+  <footer class="site-footer" id="footer">
+    <div class="container footer__top">
+
+      <div class="footer__brand">
+        <a href="index.html" class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6" />
+              <circle cx="10" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" />
+            </svg>
+          </span>
+          <span class="brand__text">Nova<span class="brand__accent">Cart</span></span>
+        </a>
+        <p class="footer__tagline">
+          A seamless online shopping experience with quality products,
+          reliable service and everyday convenience — all in one place.
+        </p>
+      </div>
+
+      <nav class="footer__links" aria-label="Footer">
+        <div class="footer__col">
+          <h4>Shop</h4>
+          <ul>
+            <li><a href="products.html">Products</a></li>
+            <li><a href="products.html?badge=New">New Arrivals</a></li>
+            <li><a href="cart.html">Your Cart</a></li>
+            <li><a href="orders.html">Your Orders</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="about.html#careers">Careers</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="help.html#shipping">Shipping Info</a></li>
+            <li><a href="help.html#returns">Returns</a></li>
+            <li><a href="help.html#privacy">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </nav>
+
+    </div>
+
+    <div class="container footer__bottom">
+      <p>&copy; <span id="year">2026</span> NovaCart. All rights reserved.</p>
+      <p class="footer__credit">Built for the CodeAlpha Full Stack Internship.</p>
+    </div>
+  </footer>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "name": "novacart",
+  "version": "1.0.0",
+  "description": "NovaCart — a full stack e-commerce store built for the CodeAlpha Full Stack Development internship.",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "seed:admin": "node server/scripts/seedAdmin.js",
+    "seed:products": "node server/scripts/seedProducts.js",
+    "seed": "npm run seed:admin && npm run seed:products",
+    "test": "node tests/auth.test.js && node tests/auth-recovery.test.js && node tests/mail.test.js && node tests/security.test.js && node tests/admin.test.js",
+    "test:auth": "node tests/auth.test.js",
+    "test:admin": "node tests/admin.test.js",
+    "test:security": "node tests/security.test.js"
+  },
+  "keywords": [
+    "ecommerce",
+    "express",
+    "mongodb",
+    "mongoose",
+    "codealpha"
+  ],
+  "author": "Huzaifa Mushtaq",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.6.2",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.20.1",
+    "nodemailer": "^9.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

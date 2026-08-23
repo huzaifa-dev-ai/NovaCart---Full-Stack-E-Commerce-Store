@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# environment — never commit real credentials
+.env
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+
+# local database files (if you run mongod with --dbpath ./data)
+data/
+
+# scratch
+tests/*.output
+*.tmp.js
+scratchpad/
