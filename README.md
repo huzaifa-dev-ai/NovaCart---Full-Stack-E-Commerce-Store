@@ -21,6 +21,9 @@ step) · Node.js + Express 5 · MongoDB + Mongoose · JWT auth in httpOnly cooki
 - **Order success** — order number and recap, fetched from the API
 - **Order history** — track deliveries, view past orders, start a return within 30 days
 - **Accounts** — register, sign in, password reset by email, change password
+- **Sign in with Google** — optional OAuth 2.0 + PKCE, run entirely server-side, with the
+  Google profile photo in the header. Sign-in admits only existing accounts and
+  registration only new ones, decided on the server
 
 ### Admin dashboard
 - **Overview** — revenue, orders, customers, stock alerts, open returns, recent activity
@@ -69,6 +72,75 @@ Generate a strong JWT secret:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
+### 2b. Google Sign-In (optional)
+
+The site works fully without this — the button simply isn't shown.
+
+1. Open the [Google Cloud console credentials page](https://console.cloud.google.com/apis/credentials)
+   and create a project if you don't have one.
+2. Configure the **OAuth consent screen** (External, "Testing" is fine) and add your own
+   Google address under **Test users**.
+3. Create an **OAuth client ID** of type **Web application**.
+4. Under **Authorized redirect URIs** add this exact string:
+
+   ```
+   https://localhost:5000/api/auth/google/callback
+   ```
+
+   It must match `APP_URL` character for character, including the scheme and port, or
+   Google answers `redirect_uri_mismatch`. If you run over plain HTTP, register the
+   `http://` form instead.
+5. Put the two values in `.env`:
+
+   ```ini
+   GOOGLE_CLIENT_ID=…apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=…
+   ```
+
+6. Restart the server. The **Continue with Google** button appears on the sign-in and
+   registration pages.
+
+#### The two buttons are different doors
+
+They are not interchangeable, and the server decides — not the page:
+
+| Page | Button | Admits | Refuses |
+|---|---|---|---|
+| `login.html` | **Continue with Google** | accounts that already exist | a Google account with no NovaCart account &rarr; sent to **register.html** |
+| `register.html` | **Sign up with Google** | Google accounts that are new here | someone who already has an account &rarr; sent to **login.html** |
+
+"Already exists" means matched by Google's `sub` **or** by email address, so someone who
+signed up with a password is an existing user even though they have never touched Google.
+
+Two things make this hold up:
+
+- **A refused attempt writes nothing.** Both lookups run before any document is created or
+  saved, so a refusal leaves no half-made account and no touched timestamps.
+- **The intent is sealed in the state cookie**, not read from the callback's query string.
+  Appending `&intent=register` on the way back from Google does not flip the gate. Each
+  page also carries its gate in the link's own `href`, so a middle-click or *open in new
+  tab* runs the same door a normal click would, and a request that states **no** intent is
+  refused outright rather than guessed — neither side is a safe default, since one links an
+  existing account and the other creates one.
+
+A refusal keeps `?next=`, so someone bounced from one door to the other still lands where
+they were originally headed once they get in.
+
+#### Linking
+
+Signing in with an address that already has a NovaCart account links the two, so there is
+one account either way. Note the linking rule in [Security](#security): if you were not
+already signed in, the existing password is switched off and the account becomes
+Google-only (recoverable with **Forgot password**). To keep both, sign in with your
+password first, then click **Continue with Google**.
+
+The Google profile photo is shown in the header next to your name. It is loaded straight
+from `googleusercontent.com` — allowed explicitly in the Content-Security-Policy, requested
+with `referrerpolicy="no-referrer"` so Google is not told which page you are on, and it
+falls back to a lettered circle if the image ever fails to load.
+
+---
+
 ### 3. Seed the database
 
 ```bash
@@ -93,6 +165,27 @@ npm start       # plain node
 ```
 
 Open **http://localhost:5000** — Express serves the site and the API from one origin.
+
+---
+
+## Brand assets
+
+The mark lives in `public/assets/icons/`, generated from `Favicon.png` in the
+project root. The source has a **black** surround rather than transparency, so
+the build measures the rounded tile and cuts the corners properly — left as-is
+it shows black wedges on a browser tab or an iOS home screen.
+
+| File | Used for |
+|---|---|
+| `public/favicon.ico` | 16/32/48, at the web root for the path browsers probe first |
+| `favicon-16.png` / `favicon-32.png` | modern `<link rel="icon">` |
+| `apple-touch-icon.png` | iOS home screen — flattened on the navy, since iOS ignores alpha |
+| `icon-192.png` / `icon-512.png` | `site.webmanifest`, Android / install prompt |
+| `logo-mark.png` | the in-page brand mark, at 2x its 38px slot |
+
+The same artwork is the brand mark everywhere it appears: the header, the
+footer, and the badge at the top of every auth card. The cards are told apart
+by their headings rather than by different icons.
 
 ---
 
@@ -134,9 +227,13 @@ reachable over HTTP.
 | POST | `/api/auth/login` | public | Start a session |
 | POST | `/api/auth/logout` | public | End a session |
 | GET | `/api/auth/me` | signed in | Current user |
-| POST | `/api/auth/forgot-password` | public | Email a reset link |
+| POST | `/api/auth/forgot-password` | public | Email a 6-digit reset code |
+| POST | `/api/auth/verify-otp` | public | Exchange the emailed code for a reset token |
 | POST | `/api/auth/reset-password` | public | Set a new password with the token |
 | PATCH | `/api/auth/password` | signed in | Change password |
+| GET | `/api/auth/google` | public | Start Google Sign-In (redirect) |
+| GET | `/api/auth/google/callback` | public | Google returns the user here |
+| GET | `/api/auth/google/status` | public | Is Google Sign-In configured? |
 
 ### Products
 | Method | Endpoint | Access | Purpose |
@@ -186,8 +283,43 @@ Also: `GET /api/health` reports uptime and database connectivity, and
 - **Stock is guarded** with conditional updates, so two shoppers cannot both buy the last unit.
 - **Login is deliberately vague** — "email or password is incorrect" either way, with a
   dummy hash on missing accounts so timing does not reveal which emails are registered.
-- **Password resets** store only a SHA-256 hash of a single-use token that expires in 30
-  minutes, and changing a password invalidates every existing session.
+- **Password resets go by one-time code, not a link.** Nothing in the email is clickable,
+  so a forwarded or intercepted message cannot be acted on by opening it. A 6-digit code is
+  only a million possibilities, so the code alone is not the control: it lives 10 minutes,
+  survives **5** wrong guesses and is then destroyed, is stored as a SHA-256 hash, and is
+  compared in constant time. A correct code is exchanged for the same single-use random
+  token the reset endpoint always took, which travels in `sessionStorage` rather than the
+  URL. Changing a password invalidates every existing session.
+- **One code a minute.** A fresh code resets the guess counter, so without a floor a script
+  could alternate "request code / burn 5 guesses" as fast as the mail server allowed. The
+  UI counts the wait down; the server enforces it by *silently ignoring* an early request
+  rather than refusing it, because "wait 40 seconds" would confirm the address is
+  registered. Revocation is
+  keyed on a `passwordVersion` counter rather than a timestamp, because a JWT's `iat`
+  is whole seconds and a session created in the same second would otherwise survive.
+- **Google Sign-In never trusts the browser.** The code-for-token exchange is a direct
+  server-to-server call, the ID token's signature is verified against Google's public
+  keys, and `state`, `nonce` and PKCE all have to match a sealed httpOnly cookie. The
+  client secret never reaches the page, and `?next=` is checked against an allowlist so
+  the callback cannot be turned into an open redirect.
+- **Only Google-verified email addresses** can create or link an account, and linking a
+  Google identity to an existing account emails the owner. A Google sign-in can never
+  grant the admin role by itself.
+- **Linking disables an unproven password.** NovaCart does not verify email ownership at
+  registration, so a password on an account is not proof that whoever set it owns the
+  address — otherwise someone could register `victim@example.com`, wait for the real
+  owner to arrive through Google, and keep a working password on the joined account
+  (*pre-account hijacking*). Linking therefore clears the password and invalidates every
+  existing session, **unless the person is already signed in to that account**, which is
+  proof they hold it. So "sign in, then add Google" keeps both methods; "arrive cold
+  through Google" does not. The durable fix is email verification at registration.
+- **The proxy is not trusted by default.** Rate limiters key on `req.ip`, which comes
+  from `X-Forwarded-For` once Express trusts a proxy. Trusting one that isn't there lets
+  any caller forge their own IP and walk past every limit — measured at 0 of 25 requests
+  blocked. Set `TRUST_PROXY` only when genuinely deployed behind one.
+- **Auth routes log the path only.** The Google callback arrives as
+  `?code=…&state=…`; writing those query strings to a log file would leave working
+  credentials sitting in it.
 - **Reset links are built from `APP_URL`, never the request's `Host` header** — otherwise a
   forged header could send a genuine-looking email pointing at an attacker's domain.
 - **Rate limiting** on sign-in, registration, password resets and the contact form.
@@ -207,6 +339,8 @@ npm test              # everything (server must be running)
 npm run test:auth
 npm run test:admin
 npm run test:security
+npm run test:google   # Google Sign-In (starts its own server on 5099)
+npm run test:otp      # password reset by one-time code
 ```
 
 They run against a live server, so start it first with `npm run dev`. The suites create

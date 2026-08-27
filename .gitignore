@@ -19,3 +19,9 @@ data/
 tests/*.output
 *.tmp.js
 scratchpad/
+
+# local TLS certificates (never commit private keys)
+certs/
+# Headless-Chrome user profiles left by the browser-driven UI tests.
+# Regenerated on demand and hundreds of megabytes each.
+chrome-profile-*/

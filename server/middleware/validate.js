@@ -78,6 +78,18 @@ const loginRules = [
 
 const forgotPasswordRules = [emailRule, runValidation];
 
+const verifyOtpRules = [
+  emailRule,
+  body("code")
+    .trim()
+    .notEmpty().withMessage("Enter the code from your email")
+    .bail()
+    // Exactly six digits — anything else cannot be one of ours, so it is
+    // rejected before it reaches the attempt counter.
+    .matches(/^[0-9]{6}$/).withMessage("The code is 6 digits"),
+  runValidation
+];
+
 const resetPasswordRules = [
   body("token")
     .trim()
@@ -129,6 +141,10 @@ const checkoutRules = [
     .trim().matches(/^[A-Za-z0-9][A-Za-z0-9\s-]{2,19}$/).withMessage("Please enter a valid postal code"),
   body("items")
     .isArray({ min: 1, max: 50 }).withMessage("Your cart is empty"),
+  body("paymentMethod")
+    .optional()
+    .trim()
+    .isIn(["cod", "card"]).withMessage("Please choose a valid payment method"),
   runValidation
 ];
 
@@ -181,6 +197,7 @@ module.exports = {
   registerRules,
   loginRules,
   forgotPasswordRules,
+  verifyOtpRules,
   resetPasswordRules,
   changePasswordRules,
   checkoutRules,

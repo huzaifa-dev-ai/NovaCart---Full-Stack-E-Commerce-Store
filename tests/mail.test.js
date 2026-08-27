@@ -1,6 +1,7 @@
 /* Mail integration tests — console mode against the live server. */
 
-const BASE = "http://localhost:5000/api";
+const { ORIGIN } = require("./origin");
+const BASE = ORIGIN + "/api";
 let pass = 0, fail = 0;
 
 const check = (label, cond, detail) => {
@@ -29,11 +30,27 @@ async function call(path, body) {
   check("register -> 201 (console mode can't break it)", r.status === 201, `got ${r.status}`);
   check(`  responded fast (${ms}ms — not waiting on mail)`, ms < 3000);
 
-  console.log("\n2. FORGOT PASSWORD — console mode");
+  // Which of these is correct depends on where mail is actually going. The
+  // reset link may only appear in the HTTP response when nothing was
+  // delivered; once a real transport exists, putting a live token in a
+  // response body would be exactly the leak this suite exists to catch.
+  const mode = process.env.SMTP_HOST ? "smtp"
+    : (process.env.NODE_ENV === "development" && process.env.MAIL_ETHEREAL === "true") ? "ethereal"
+    : "console";
+
+  console.log(`\n2. FORGOT PASSWORD — ${mode} mode`);
   r = await call("/auth/forgot-password", { email });
   check("-> 200 with neutral message", r.status === 200 && /if an account exists/i.test(r.json.message));
-  check("  devResetUrl present (nothing was delivered)", !!r.json.devResetUrl);
-  check("  no devPreviewUrl (not Ethereal mode)", !r.json.devPreviewUrl);
+
+  if (mode === "console") {
+    check("  devResetCode present (nothing was delivered)", !!r.json.devResetCode);
+  } else {
+    check("  the code is NOT in the response (it was emailed)", !r.json.devResetCode,
+          String(r.json.devResetCode));
+  }
+  check("  and no reset link is sent either way", !r.json.devResetUrl,
+        String(r.json.devResetUrl));
+  check("  no devPreviewUrl unless Ethereal", mode === "ethereal" || !r.json.devPreviewUrl);
 
   console.log("\n3. CONTACT FORM");
   r = await call("/contact", {});

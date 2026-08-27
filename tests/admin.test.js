@@ -2,7 +2,8 @@
 
 require("dotenv").config({ quiet: true, path: require("path").join(__dirname, "..", ".env") });
 
-const BASE = "http://localhost:5000/api";
+const { ORIGIN } = require("./origin");
+const BASE = ORIGIN + "/api";
 let pass = 0, fail = 0;
 const check = (l, c, d) => {
   if (c) { pass++; console.log(`  PASS  ${l}`); }

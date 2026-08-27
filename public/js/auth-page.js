@@ -53,6 +53,128 @@
     if (raw) { link.href += "?next=" + encodeURIComponent(raw); }
   }
 
+  /* ---------- Handing the address to the reset flow ---------- */
+
+  // Kept in sessionStorage rather than the query string: a reset request is
+  // about a specific mailbox, and a URL ends up in history, bookmarks and the
+  // Referer header. sessionStorage stays in this tab and dies with it.
+  var RESET_EMAIL_KEY = "novacart.reset.email";
+  var RESET_SENT_KEY = "novacart.reset.sent";
+
+  /**
+   * "Forgot password?" should not ask for the address a second time — it is
+   * already in the box above the link. If it is NOT, there is nothing to send
+   * to, so stay put and ask for it here rather than on the next page.
+   */
+  function initForgotLink() {
+    var link = document.getElementById("forgotLink");
+    var field = document.getElementById("liEmail");
+    if (!link || !field) { return; }
+
+    link.addEventListener("click", function (event) {
+      var value = field.value.trim();
+
+      if (!EMAIL_RE.test(value)) {
+        event.preventDefault();
+        setInvalid(field, true);
+        field.setAttribute("aria-invalid", "true");
+        field.focus();
+        showAlert(value
+          ? "That email address doesn't look right. Correct it and we'll send the code there."
+          : "Enter your email address first — we'll send the code straight to it.");
+        return;
+      }
+
+      try {
+        sessionStorage.setItem(RESET_EMAIL_KEY, value);
+        // A different address than last time means a genuinely new request.
+        sessionStorage.removeItem(RESET_SENT_KEY);
+      } catch (err) {
+        // Private mode: the next page falls back to asking, which still works.
+      }
+      // The href does the navigating, so this keeps working without JS too.
+    });
+  }
+
+  /* ---------- Google Sign-In ---------- */
+
+  /**
+   * Why the OAuth failures are spelled out here rather than in a JSON
+   * response: the callback is reached by browser navigation, so the server
+   * can only hand us a short code on the query string. It deliberately
+   * keeps that code coarse -- the detail goes to the server log, not to
+   * whoever happens to be driving the browser.
+   */
+  var GOOGLE_ERRORS = {
+    google_denied: "Google sign-in was cancelled. You can try again or use your email and password.",
+    google_state: "That sign-in link expired before it was used. Please try again.",
+    google_unverified: "Google hasn't verified the email address on that account, so we can't use it to sign in.",
+    google_disabled: "Google sign-in isn't available right now. Please use your email and password.",
+    google_failed: "We couldn't complete sign-in with Google. Please try again.",
+    google_conflict: "That email is already linked to a different Google account. Please sign in with the original one, or use your email and password.",
+    google_no_account: "There's no NovaCart account for that Google account yet. Create one below and you'll be signed in.",
+    google_already_registered: "You already have a NovaCart account with that email — sign in below instead.",
+    google_rate_limited: "Too many sign-in attempts. Please wait a few minutes and try again.",
+    google_no_intent: "Please use the Continue with Google button on this page rather than a saved link."
+  };
+
+  /** Report a failed round trip, then scrub it from the address bar. */
+  function showOAuthError() {
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get("error");
+    if (!code || !GOOGLE_ERRORS[code]) { return; }
+
+    showAlert(GOOGLE_ERRORS[code]);
+
+    // Leaving ?error= in place means a refresh, or a bookmark, replays a
+    // stale message at someone who has since signed in perfectly well.
+    params.delete("error");
+    var rest = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (rest ? "?" + rest : ""));
+  }
+
+  /**
+   * Reveal the button only once the server confirms it holds Google
+   * credentials. A button that always renders and sometimes 503s is worse
+   * than one that isn't offered.
+   */
+  function initGoogle() {
+    var block = document.getElementById("googleBlock");
+    var button = document.getElementById("googleBtn");
+    if (!block || !button) { return; }
+
+    fetch("/api/auth/google/status", { credentials: "same-origin" })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (data && data.enabled) { block.hidden = false; }
+      })
+      .catch(function () { /* offline or blocked -- the email form still works */ });
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+
+      // Start from the element's OWN href, so the gate in the markup and the
+      // gate a click sends can never disagree. Rebuilding the path here once
+      // meant a middle-click — which fires auxclick, not click — followed the
+      // bare href and ran the other gate entirely.
+      var target = new URL(button.getAttribute("href") || "/api/auth/google",
+                           window.location.origin);
+      var params = target.searchParams;
+
+      // Carry the page they were originally headed for. The server checks
+      // this against its own allowlist too -- never trust the round trip.
+      var wanted = new URLSearchParams(window.location.search).get("next");
+      if (wanted) { params.set("next", wanted); }
+
+      // Honour "Keep me signed in" when the login page offers it, so the
+      // Google path produces the same kind of session as the email path.
+      var remember = document.getElementById("liRemember");
+      if (remember && !remember.checked) { params.set("remember", "false"); }
+
+      window.location.href = target.pathname + target.search;
+    });
+  }
+
   /* ---------- Field helpers ---------- */
 
   function setInvalid(input, invalid) {
@@ -274,6 +396,9 @@
       if (user) { window.location.replace(destinationFor(user)); }
     });
 
+    showOAuthError();
+    initGoogle();
+    initForgotLink();
     initPasswordToggles();
 
     var form = login || register;

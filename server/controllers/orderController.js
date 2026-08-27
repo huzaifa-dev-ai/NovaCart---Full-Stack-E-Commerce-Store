@@ -39,11 +39,11 @@ async function createOrder(req, res, next) {
       throw ApiError.badRequest("That's more line items than we can process at once.");
     }
 
-    // Collapse duplicate ids so someone can't slip past the stock check by
-    // sending the same product on several lines.
+    // Collapse duplicate (id, colorId) pairs
     const wanted = new Map();
     for (const line of items) {
       const id = Number(line.id ?? line.productId);
+      const colorId = line.colorId ? String(line.colorId).trim() : null;
       const qty = Math.floor(Number(line.qty));
       if (!Number.isInteger(id) || id < 1) {
         throw ApiError.badRequest("One of the items has an invalid product id.");
@@ -51,31 +51,41 @@ async function createOrder(req, res, next) {
       if (!Number.isInteger(qty) || qty < 1 || qty > 99) {
         throw ApiError.badRequest("Quantities must be whole numbers between 1 and 99.");
       }
-      wanted.set(id, (wanted.get(id) || 0) + qty);
+      const key = `${id}::${colorId || ""}`;
+      wanted.set(key, { id, colorId, qty: (wanted.get(key)?.qty || 0) + qty });
     }
 
-    const products = await Product.find({ id: { $in: [...wanted.keys()] }, active: true });
+    const productIds = [...new Set([...wanted.values()].map((w) => w.id))];
+    const products = await Product.find({ id: { $in: productIds }, active: true });
     const byId = new Map(products.map((p) => [p.id, p]));
 
     const orderItems = [];
-    for (const [id, qty] of wanted) {
+    for (const { id, colorId, qty } of wanted.values()) {
       const product = byId.get(id);
       if (!product) {
         throw ApiError.badRequest(`One of the items is no longer available.`, {
           code: "PRODUCT_UNAVAILABLE"
         });
       }
-      if (product.stock < qty) {
+
+      const activeColor = colorId || product.defaultColorId || (product.colors && product.colors[0] && product.colors[0].id);
+      const colorObj = (product.colors || []).find((c) => c.id === activeColor);
+
+      const availableStock = colorObj ? colorObj.stockCount : product.stock;
+      if (availableStock < qty) {
         throw ApiError.conflict(
-          `${product.name} only has ${product.stock} left in stock.`,
+          `${product.name}${colorObj ? " (" + colorObj.label + ")" : ""} only has ${availableStock} left in stock.`,
           { code: "INSUFFICIENT_STOCK" }
         );
       }
+
       orderItems.push({
         product: product._id,
         productId: product.id,
+        colorId: activeColor || null,
+        colorLabel: colorObj ? colorObj.label : "",
         name: product.name,
-        image: product.image,
+        image: colorObj ? colorObj.image : product.image,
         unitPrice: product.price,      // from the DB, never from the client
         qty
       });

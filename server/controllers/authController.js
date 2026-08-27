@@ -7,12 +7,14 @@
    GET  /api/auth/me         who am I?
    ============================================================= */
 
+const crypto = require("crypto");
+
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const { signToken, setAuthCookie, clearAuthCookie } = require("../utils/token");
 // (clearAuthCookie is used by logout and by the password-reset flow)
 const { sendMail } = require("../utils/mailer");
-const { resetEmail, welcomeEmail } = require("../utils/emailTemplates");
+const { resetOtpEmail, welcomeEmail } = require("../utils/emailTemplates");
 const { isDev, mailMode, baseUrl } = require("../utils/env");
 
 /**
@@ -105,6 +107,17 @@ async function login(req, res, next) {
       throw invalid;
     }
 
+    // A Google-created account has no password hash at all. Say so plainly:
+    // "email or password is incorrect" would send them round in circles
+    // trying to guess a password that was never set. This leaks only that
+    // the address uses Google — which Google's own button already implies.
+    if (!user.password) {
+      throw ApiError.unauthorized(
+        "This account signs in with Google. Use the “Continue with Google” button above.",
+        { code: "USE_GOOGLE" }
+      );
+    }
+
     const ok = await user.verifyPassword(password);
     if (!ok) { throw invalid; }
 
@@ -147,42 +160,97 @@ function me(req, res) {
 async function forgotPassword(req, res, next) {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findForOtp(email);
 
     const reply = {
       success: true,
-      message:
-        "If an account exists for that email, a reset link is on its way. " +
-        "The link is valid for 30 minutes."
+      message: "If an account exists for that address, a reset code is on its way."
     };
 
-    if (user) {
-      const rawToken = user.createPasswordResetToken();
+    // A premature request is ignored rather than refused. Answering "wait 40
+    // seconds" would confirm the address is registered, which is exactly what
+    // the identical message above exists to prevent — so the caller sees the
+    // same reply either way and their existing code simply stays valid.
+    if (user && user.canIssueResetOtp()) {
+      const code = user.createResetOtp();
       await user.save({ validateBeforeSave: false });
 
-      // The link's origin comes from configuration (APP_URL), NEVER from the
-      // request's Host header. A forged Host would otherwise produce a
-      // genuine-looking email pointing at the attacker's domain, handing them
-      // the victim's token the moment it is clicked.
-      const resetUrl = `${baseUrl(req)}/reset-password.html?token=${rawToken}`;
-
-      // Console mode means no mail leaves the process, so the link is shown
+      // Console mode means no mail leaves the process, so the code is shown
       // locally to keep the flow testable. isDev() is an allowlist — an unset
-      // or misspelled NODE_ENV counts as production and never leaks a token.
+      // or misspelled NODE_ENV counts as production and never leaks it.
       if (isDev() && mailMode() === "console") {
-        console.log("\n🔑  Password reset link (development only):");
-        console.log(`    ${resetUrl}\n`);
-        reply.devResetUrl = resetUrl;
+        console.log(`\n🔑  Password reset code (development only): ${code}\n`);
+        reply.devResetCode = code;
       }
 
       // Fire-and-forget. Awaiting the SMTP round-trip would make responses for
       // registered addresses measurably slower than for unknown ones — the very
-      // account-enumeration signal the neutral message above exists to prevent.
-      sendMail({ to: user.email, ...resetEmail({ name: user.name, resetUrl }) })
-        .catch((err) => console.error("📧  Reset email failed to send:", err.message));
+      // thing the identical message above exists to prevent.
+      sendMail({
+        to: user.email,
+        ...resetOtpEmail({
+          name: user.name,
+          code,
+          minutes: User.OTP_TTL_MINUTES,
+          attempts: User.OTP_MAX_ATTEMPTS
+        })
+      }).catch((err) => console.warn("📧  Reset code email failed:", err.message));
     }
 
     res.json(reply);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ---------- POST /api/auth/verify-otp ---------- */
+
+/**
+ * Exchange a correct one-time code for the single-use token that actually
+ * authorises the password change.
+ *
+ * Splitting it this way means the password-setting endpoint below never had
+ * to change: it still takes a random 32-byte token, and the code is simply
+ * how that token is now earned.
+ */
+async function verifyResetOtp(req, res, next) {
+  try {
+    const { email, code } = req.body;
+    const user = await User.findForOtp(email);
+
+    // One message for every failure — wrong code, expired code, no code, no
+    // account. Distinguishing them would turn this into a way to discover
+    // which addresses are registered, and telling an attacker how many
+    // guesses remain would tell them exactly when to request a fresh code.
+    const invalid = ApiError.badRequest(
+      "That code is incorrect or has expired. Please request a new one.",
+      { code: "OTP_INVALID" }
+    );
+
+    if (!user) {
+      // Spend comparable time so a missing account is not detectably faster.
+      crypto.createHash("sha256").update(String(code || "")).digest("hex");
+      throw invalid;
+    }
+
+    const result = user.verifyResetOtp(code);
+
+    // Saved on BOTH paths: a wrong guess has to be recorded, or the attempt
+    // cap means nothing and the code can be walked through a million tries.
+    if (!result.ok) {
+      await user.save({ validateBeforeSave: false });
+      throw invalid;
+    }
+
+    // Correct. Mint the token the reset endpoint expects.
+    const token = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    res.json({
+      success: true,
+      message: "Code accepted. Choose a new password.",
+      token
+    });
   } catch (error) {
     next(error);
   }
@@ -197,7 +265,7 @@ async function resetPassword(req, res, next) {
     const user = await User.findByResetToken(token);
     if (!user) {
       throw ApiError.badRequest(
-        "This reset link is invalid or has expired. Please request a new one.",
+        "This reset request is invalid or has expired. Please start again.",
         { code: "RESET_TOKEN_INVALID" }
       );
     }
@@ -205,6 +273,7 @@ async function resetPassword(req, res, next) {
     user.password = password;              // re-hashed by the pre-save hook
     user.passwordResetToken = null;        // single use
     user.passwordResetExpires = null;
+    user.clearResetOtp();                  // nothing outstanding survives a reset
     await user.save();                     // also stamps passwordChangedAt
 
     // Deliberately NOT signed in here: whoever holds the mailbox proved
@@ -229,6 +298,16 @@ async function changePassword(req, res, next) {
     const user = await User.findById(req.user._id).select("+password");
     if (!user) {
       throw ApiError.unauthorized("This account no longer exists.");
+    }
+
+    // Nothing to compare against on a Google-only account. The reset flow
+    // mails the same verified address, so it's a safe way to add a password.
+    if (!user.password) {
+      throw ApiError.badRequest(
+        "This account signs in with Google and has no password yet. " +
+        "Use “Forgot password” to set one.",
+        { code: "NO_PASSWORD_SET" }
+      );
     }
 
     const ok = await user.verifyPassword(currentPassword);
@@ -262,11 +341,14 @@ async function changePassword(req, res, next) {
 }
 
 module.exports = {
+  roleFor,                 // shared with the Google sign-in controller, so
+                           // role policy has exactly one implementation
   register,
   login,
   logout,
   me,
   forgotPassword,
+  verifyResetOtp,
   resetPassword,
   changePassword
 };

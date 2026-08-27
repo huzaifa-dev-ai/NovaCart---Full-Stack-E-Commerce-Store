@@ -51,27 +51,32 @@ window.NovaCart = window.NovaCart || {};
       return read().reduce(function (sum, item) { return sum + item.qty; }, 0);
     },
 
-    /** Quantity of one product currently in the cart. */
-    getQty: function (productId) {
+    /** Quantity of one product (and optional color) currently in the cart. */
+    getQty: function (productId, colorId) {
       var id = Number(productId);
-      var found = read().filter(function (i) { return i.id === id; })[0];
-      return found ? found.qty : 0;
+      var items = read();
+      if (colorId) {
+        var found = items.filter(function (i) { return i.id === id && (i.colorId || null) === colorId; })[0];
+        return found ? found.qty : 0;
+      }
+      return items.filter(function (i) { return i.id === id; }).reduce(function (sum, i) { return sum + i.qty; }, 0);
     },
 
     /**
      * Add a product, or increase its quantity if already present.
      * @returns {number} the product's new quantity
      */
-    add: function (productId, qty) {
+    add: function (productId, qty, colorId) {
       var id = Number(productId);
       var amount = Number(qty) > 0 ? Number(qty) : 1;
+      var targetColor = colorId || null;
       var items = read();
-      var existing = items.filter(function (i) { return i.id === id; })[0];
+      var existing = items.filter(function (i) { return i.id === id && (i.colorId || null) === targetColor; })[0];
 
       if (existing) {
         existing.qty += amount;
       } else {
-        items.push({ id: id, qty: amount });
+        items.push({ id: id, colorId: targetColor, qty: amount });
       }
 
       write(items);
@@ -79,28 +84,34 @@ window.NovaCart = window.NovaCart || {};
     },
 
     /** Set an exact quantity; 0 or less removes the line. */
-    setQty: function (productId, qty) {
+    setQty: function (productId, qty, colorId) {
       var id = Number(productId);
       var amount = Number(qty);
+      var targetColor = colorId || null;
 
-      if (!amount || amount < 1) { return Cart.remove(id); }
+      if (!amount || amount < 1) { return Cart.remove(id, targetColor); }
 
       var items = read();
-      var existing = items.filter(function (i) { return i.id === id; })[0];
+      var existing = items.filter(function (i) { return i.id === id && (i.colorId || null) === targetColor; })[0];
 
       if (existing) { existing.qty = amount; }
-      else { items.push({ id: id, qty: amount }); }
+      else { items.push({ id: id, colorId: targetColor, qty: amount }); }
 
       write(items);
     },
 
     /** Remove a product line entirely. */
-    remove: function (productId) {
+    remove: function (productId, colorId) {
       var id = Number(productId);
-      write(read().filter(function (i) { return i.id !== id; }));
+      var targetColor = colorId || null;
+      write(read().filter(function (i) {
+        if (i.id !== id) { return true; }
+        if (targetColor !== null) { return (i.colorId || null) !== targetColor; }
+        return false;
+      }));
     },
 
-    /** Empty the cart. */
+    /** Clear the cart completely (used after successful checkout). */
     clear: function () {
       write([]);
     }

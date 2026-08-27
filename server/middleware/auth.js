@@ -48,7 +48,7 @@ async function protect(req, _res, next) {
 
     // A password change or reset invalidates every token issued before it,
     // so a stolen session dies the moment the owner changes their password.
-    if (user.passwordChangedAfter(payload.iat)) {
+    if (user.sessionIsStale(payload.pwv, payload.iat)) {
       throw ApiError.unauthorized(
         "Your password was changed. Please sign in again.",
         { code: "PASSWORD_CHANGED" }
@@ -71,7 +71,11 @@ async function attachUser(req, _res, next) {
     const token = readToken(req);
     if (token) {
       const payload = verifyToken(token);
-      req.user = await User.findById(payload.sub);
+      const user = await User.findById(payload.sub);
+      // Same revocation rule as protect(). Without it a session cancelled
+      // by a password change would still be honoured here, and an order
+      // would be attributed to an account whose session was supposedly gone.
+      req.user = user && !user.sessionIsStale(payload.pwv, payload.iat) ? user : undefined;
     }
   } catch {
     req.user = undefined;      // a bad token simply means "guest" here

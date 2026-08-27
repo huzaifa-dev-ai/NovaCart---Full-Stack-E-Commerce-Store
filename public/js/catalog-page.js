@@ -106,11 +106,13 @@
     var button = event.target.closest(".js-add-to-cart");
     if (!button || button.disabled) { return; }
 
+    var card = button.closest(".card");
     var id = Number(button.getAttribute("data-id"));
     var product = all.filter(function (p) { return p.id === id; })[0];
     if (!product) { return; }
 
-    ui.addToCart(product, 1, button);
+    var selectedColorId = card ? card.getAttribute("data-selected-color") : null;
+    ui.addToCart(product, 1, button, selectedColorId);
   }
 
   /* ---------- Init ---------- */

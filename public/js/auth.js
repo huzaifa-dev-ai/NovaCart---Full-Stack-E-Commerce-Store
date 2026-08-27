@@ -234,7 +234,7 @@ window.NovaCart = window.NovaCart || {};
      * @returns {Promise<void>}
      */
     /**
-     * Ask for a reset link. Always resolves the same way whether or not the
+     * Ask for a reset code. Always resolves the same way whether or not the
      * address is registered — the server refuses to confirm which emails exist.
      * @returns {Promise<Object>}
      */
@@ -250,6 +250,21 @@ window.NovaCart = window.NovaCart || {};
      * Does NOT sign the user in — they must log in with the new password.
      * @returns {Promise<Object>}
      */
+    /**
+     * Exchange the emailed 6-digit code for the single-use token that
+     * authorises the password change.
+     * @returns {Promise<{token: string}>}
+     */
+    verifyResetOtp: function (email, code) {
+      return request("/auth/verify-otp", {
+        method: "POST",
+        body: {
+          email: String(email || "").trim().toLowerCase(),
+          code: String(code || "").trim()
+        }
+      });
+    },
+
     resetPassword: function (token, password) {
       return request("/auth/reset-password", {
         method: "POST",

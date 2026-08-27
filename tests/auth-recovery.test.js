@@ -1,12 +1,44 @@
 /* Tests for the five additions: remember-me, forgot, reset, change password, headers. */
 
-const BASE = "http://localhost:5000/api/auth";
+require("dotenv").config({ quiet: true });
+const { ORIGIN } = require("./origin");
+const BASE = ORIGIN + "/api/auth";
 let pass = 0, fail = 0;
 
 const check = (label, cond, detail) => {
   if (cond) { pass++; console.log(`  PASS  ${label}`); }
   else { fail++; console.log(`  FAIL  ${label}${detail ? "  -> " + detail : ""}`); }
 };
+
+/* ---------- Database helpers ----------
+   The reset token is stored only as a SHA-256 hash, so the raw value
+   cannot be read back out. These connect lazily and are only used where
+   the test genuinely needs a usable token. */
+
+let db = null;
+async function models() {
+  if (!db) {
+    const mongoose = require("mongoose");
+    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+    db = { mongoose, User: require("../server/models/User") };
+  }
+  return db;
+}
+
+async function resetOtpHashFor(email) {
+  const { User } = await models();
+  const user = await User.findOne({ email }).select("+resetOtp");
+  return user && user.resetOtp;
+}
+
+/** Issue a real reset token the same way forgot-password does. */
+async function mintResetToken(email) {
+  const { User } = await models();
+  const user = await User.findOne({ email });
+  const raw = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+  return raw;
+}
 
 async function call(path, options = {}) {
   const res = await fetch(BASE + path, {
@@ -52,8 +84,22 @@ const section = (t) => console.log("\n" + t);
   check("known email -> 200", r.status === 200, `got ${r.status}`);
   check("  neutral message (no account disclosure)",
         /if an account exists/i.test(r.json.message || ""), r.json.message);
-  check("  dev reset link provided", !!r.json.devResetUrl);
-  const token = (r.json.devResetUrl || "").split("token=")[1];
+  // Recovery is by one-time code now, so nothing clickable is sent and the
+  // response must never carry the code once mail is actually configured.
+  const consoleMail = !process.env.SMTP_HOST;
+  check("  the code is never in the response when mail is configured",
+        consoleMail || !r.json.devResetCode, JSON.stringify(r.json.devResetCode));
+  check("  no link is sent at all", !r.json.devResetUrl, JSON.stringify(r.json.devResetUrl));
+  check("  a CODE was minted (checked in the database, not the response)",
+        !!(await resetOtpHashFor(email)));
+  check("    stored as a hash, never the digits",
+        String(await resetOtpHashFor(email)).length === 64);
+
+  // The reset endpoint itself still takes a random token — the code is just
+  // how that token is now earned. Mint one directly so this section keeps
+  // testing the endpoint rather than the code exchange, which has its own
+  // suite in tests/otp.test.js.
+  const token = await mintResetToken(email);
 
   const unknown = await call("/forgot-password", { method: "POST", body: { email: "ghost@nowhere.test" } });
   check("unknown email -> also 200", unknown.status === 200, `got ${unknown.status}`);
@@ -134,5 +180,6 @@ const section = (t) => console.log("\n" + t);
         (await call("/login", { method: "POST", body: { email, password: PW3 } })).status === 200);
 
   console.log(`\n${"=".repeat(46)}\n  ${pass} passed, ${fail} failed\n${"=".repeat(46)}`);
+  if (db) { await db.mongoose.disconnect().catch(() => {}); }
   process.exit(fail ? 1 : 0);
 })();

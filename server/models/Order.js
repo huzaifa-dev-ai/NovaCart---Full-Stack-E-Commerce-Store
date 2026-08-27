@@ -17,6 +17,8 @@ const orderItemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
     productId: { type: Number, required: true },      // numeric id, for links
+    colorId: { type: String, default: null },
+    colorLabel: { type: String, default: "" },
     name: { type: String, required: true },
     image: { type: String, default: "" },
     unitPrice: { type: Number, required: true, min: 0 },

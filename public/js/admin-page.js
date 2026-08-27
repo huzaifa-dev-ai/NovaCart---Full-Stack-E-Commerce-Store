@@ -414,6 +414,20 @@
 
   /* ================= ORDERS ================= */
 
+  var PM_LABELS = { cod: "COD", card: "Card" };
+  var PS_COLORS = {
+    unpaid:   { bg: "#F1F5F9", fg: "#475569" },
+    pending:  { bg: "#FEF3C7", fg: "#D97706" },
+    paid:     { bg: "#ECFDF5", fg: "#059669" },
+    failed:   { bg: "#FEF2F2", fg: "#DC2626" },
+    refunded: { bg: "#EDE9FE", fg: "#7C3AED" }
+  };
+  function payBadge(method, status) {
+    var label = (PM_LABELS[method] || "COD") + " · " + (status || "unpaid");
+    var c = PS_COLORS[status] || PS_COLORS.unpaid;
+    return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:.75rem;font-weight:700;background:' + c.bg + ';color:' + c.fg + ';">' + esc(label) + '</span>';
+  }
+
   var orderCache = [];
 
   function loadOrders() {
@@ -429,7 +443,7 @@
       var body = document.getElementById("orderRows");
 
       if (!orderCache.length) {
-        body.innerHTML = row(6, "No orders match those filters.");
+        body.innerHTML = row(7, "No orders match those filters.");
         return;
       }
 
@@ -441,6 +455,7 @@
           "<td>" + date(o.placedAt) + "</td>" +
           "<td>" + units + "</td>" +
           "<td>" + pill(o.status) + "</td>" +
+          "<td>" + payBadge(o.paymentMethod, o.paymentStatus) + "</td>" +
           '<td class="admin-table__right admin-table__strong">' + money(o.total) + "</td>" +
         "</tr>";
       }).join("");
@@ -481,6 +496,8 @@
     var body =
       '<dl class="detail-rows">' +
         '<div class="detail-row"><dt>Status</dt><dd>' + pill(order.status) + "</dd></div>" +
+        '<div class="detail-row"><dt>Payment</dt><dd>' + payBadge(order.paymentMethod, order.paymentStatus) +
+          (order.paymentRef ? '<div style="margin-top:4px;font-size:.84rem;color:var(--slate-700);"><strong>Trx ID:</strong> <code style="background:#F1F5F9;padding:2px 6px;border-radius:4px;">' + esc(order.paymentRef) + '</code></div>' : '') + "</dd></div>" +
         '<div class="detail-row"><dt>Placed</dt><dd>' + dateTime(order.placedAt) + "</dd></div>" +
         '<div class="detail-row"><dt>Customer</dt><dd>' + esc(order.customer.name) + "</dd></div>" +
         '<div class="detail-row"><dt>Email</dt><dd>' + esc(order.customer.email) + "</dd></div>" +

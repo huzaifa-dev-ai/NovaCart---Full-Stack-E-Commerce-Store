@@ -52,15 +52,21 @@
     App.Cart.getItems().forEach(function (item) {
       var product = byId(item.id);
       if (!product) {
-        App.Cart.remove(item.id);            // product no longer sold
+        App.Cart.remove(item.id, item.colorId);            // product no longer sold
         return;
       }
+      var colorId = item.colorId || product.defaultColorId || (product.colors && product.colors[0] && product.colors[0].id);
+      var colorObj = (product.colors || []).filter(function (c) { return c.id === colorId; })[0];
+
+      var stock = colorObj ? colorObj.stockCount : product.stock;
+      var inStock = colorObj ? (colorObj.inStock && stock > 0) : (product.stock > 0);
+
       var qty = item.qty;
-      if (product.stock > 0 && qty > product.stock) {
-        qty = product.stock;                  // stock shrank since adding
-        App.Cart.setQty(product.id, qty);
+      if (inStock && qty > stock) {
+        qty = stock;                  // stock shrank since adding
+        App.Cart.setQty(product.id, qty, colorId);
       }
-      out.push({ product: product, qty: qty });
+      out.push({ product: product, colorId: colorId, colorObj: colorObj, qty: qty, stock: stock, inStock: inStock });
     });
     return out;
   }
@@ -69,19 +75,25 @@
 
   function lineHtml(line) {
     var p = line.product;
-    var unavailable = p.stock <= 0;
-    var detailsUrl = "product.html?id=" + p.id;
-    var maxQty = Math.min(p.stock, 99);
+    var colorObj = line.colorObj;
+    var colorId = line.colorId;
+    var itemImg = colorObj ? colorObj.image : p.image;
+    var colorBadge = colorObj ? ('<span class="cart-item__color-badge" style="font-size:0.8rem; font-weight:600; color:var(--indigo-600); display:block; margin-top:2px;">Color: ' + ui.esc(colorObj.label) + '</span>') : '';
+
+    var unavailable = !line.inStock;
+    var detailsUrl = "product.html?id=" + p.id + (colorId ? "&color=" + encodeURIComponent(colorId) : "");
+    var maxQty = Math.min(line.stock, 99);
 
     return (
-      '<article class="cart-item' + (unavailable ? " is-unavailable" : "") + '" data-id="' + p.id + '">' +
+      '<article class="cart-item' + (unavailable ? " is-unavailable" : "") + '" data-id="' + p.id + '" data-color-id="' + ui.esc(colorId || "") + '">' +
         '<a class="cart-item__media" href="' + detailsUrl + '" tabindex="-1" aria-hidden="true">' +
-          '<img src="' + ui.esc(p.image) + '" alt="" loading="lazy" />' +
+          '<img src="' + ui.esc(itemImg) + '" data-fallback="' + ui.esc(p.image) + '" alt="" loading="lazy" />' +
         "</a>" +
 
         '<div class="cart-item__info">' +
           '<p class="cart-item__category">' + ui.esc(p.category) + "</p>" +
           '<h3 class="cart-item__name"><a href="' + detailsUrl + '">' + ui.esc(p.name) + "</a></h3>" +
+          colorBadge +
           (unavailable
             ? '<p class="cart-item__flag">Out of stock — not included in your total</p>'
             : '<p class="cart-item__unit">' + ui.money(p.price) + " each</p>") +

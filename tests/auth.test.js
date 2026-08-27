@@ -1,6 +1,7 @@
 /* End-to-end tests against the live NovaCart auth API. */
 
-const BASE = "http://localhost:5000/api/auth";
+const { ORIGIN } = require("./origin");
+const BASE = ORIGIN + "/api/auth";
 let pass = 0, fail = 0;
 
 function check(label, condition, detail) {

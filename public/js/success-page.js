@@ -64,17 +64,43 @@
           return sum + line.qty;
         }, 0);
 
-        recapEl.textContent =
+        var paymentParam = new URLSearchParams(window.location.search).get("payment");
+        var pmLabels = {
+          cod: "Cash on Delivery",
+          card: "Credit / Debit Card"
+        };
+        var pmName = pmLabels[order.paymentMethod] || "Cash on Delivery";
+        var statusBadge = "";
+
+        if (order.paymentStatus === "paid" || paymentParam === "success") {
+          statusBadge = '<span style="display:inline-block;margin-top:10px;padding:4px 12px;background:#ECFDF5;color:#059669;border-radius:20px;font-weight:700;font-size:0.85rem;">✓ Paid via ' + ui.esc(pmName) + '</span>';
+        } else if (order.paymentStatus === "failed" || paymentParam === "failed") {
+          statusBadge = '<span style="display:inline-block;margin-top:10px;padding:4px 12px;background:#FEF2F2;color:#DC2626;border-radius:20px;font-weight:700;font-size:0.85rem;">✕ Payment Failed (' + ui.esc(pmName) + ')</span>';
+        } else if (order.paymentMethod === "cod") {
+          statusBadge = '<span style="display:inline-block;margin-top:10px;padding:4px 12px;background:#F1F5F9;color:#475569;border-radius:20px;font-weight:700;font-size:0.85rem;">💵 Cash on Delivery</span>';
+        } else {
+          var trxText = order.paymentRef ? ' · Trx ID: ' + ui.esc(order.paymentRef) : '';
+          statusBadge = '<span style="display:inline-block;margin-top:10px;padding:4px 12px;background:#FEF3C7;color:#D97706;border-radius:20px;font-weight:700;font-size:0.85rem;">⏳ Payment Verification Pending (' + ui.esc(pmName) + trxText + ')</span>';
+        }
+
+        recapEl.innerHTML =
           units + (units === 1 ? " item" : " items") +
           " · " + money(order.total) +
-          (order.customer && order.customer.city ? " · delivering to " + order.customer.city : "");
+          (order.customer && order.customer.city ? " · delivering to " + ui.esc(order.customer.city) : "") +
+          "<br/>" + statusBadge;
         recapEl.hidden = false;
 
         if (order.customer && order.customer.email) {
-          messageEl.innerHTML =
-            "Your order has been received and is being prepared. A confirmation is on " +
-            "its way to <strong>" + ui.esc(order.customer.email) + "</strong>, and we'll " +
-            "email you again as soon as it ships.";
+          if (order.paymentStatus === "failed" || paymentParam === "failed") {
+            messageEl.innerHTML =
+              "Your order <strong>" + ui.esc(order.number) + "</strong> was recorded, but the online payment could not be processed. " +
+              "Our team will contact you at <strong>" + ui.esc(order.customer.email) + "</strong> to arrange payment.";
+          } else {
+            messageEl.innerHTML =
+              "Your order has been received and is being prepared. A confirmation is on " +
+              "its way to <strong>" + ui.esc(order.customer.email) + "</strong>, and we'll " +
+              "email you again as soon as it ships.";
+          }
         }
       })
       .catch(function () {

@@ -12,6 +12,7 @@
 
 const jwt = require("jsonwebtoken");
 const ApiError = require("./ApiError");
+const { isProd } = require("./env");
 
 const COOKIE_NAME = "novacart_token";
 
@@ -34,7 +35,9 @@ function secret() {
  */
 function signToken(user, remember) {
   return jwt.sign(
-    { sub: user._id.toString(), role: user.role },
+    // `pwv` lets protect() reject sessions from before the last password
+    // change without depending on one-second clock resolution.
+    { sub: user._id.toString(), role: user.role, pwv: user.passwordVersion || 0 },
     secret(),
     {
       // The JWT lifetime mirrors the cookie so neither outlives the other.
@@ -76,7 +79,10 @@ function setAuthCookie(res, token, remember) {
   const options = {
     httpOnly: true,                                  // unreadable from JS
     sameSite: "lax",                                 // survives normal navigation, blocks CSRF from other sites
-    secure: process.env.NODE_ENV === "production",   // HTTPS only once deployed
+    // isProd() is an allowlist: only an explicit NODE_ENV=development drops
+    // Secure. Testing for "production" instead would fail OPEN — one unset
+    // variable on a real deploy and the session cookie travels in the clear.
+    secure: isProd(),
     path: "/"
   };
 
@@ -92,7 +98,7 @@ function clearAuthCookie(res) {
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProd(),
     path: "/"
   });
 }

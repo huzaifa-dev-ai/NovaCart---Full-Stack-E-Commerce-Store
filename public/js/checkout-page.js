@@ -42,13 +42,19 @@
     App.Cart.getItems().forEach(function (item) {
       var product = catalog.filter(function (p) { return p.id === item.id; })[0];
       if (!product) {
-        App.Cart.remove(item.id);
+        App.Cart.remove(item.id, item.colorId);
         return;
       }
-      if (product.stock <= 0) { return; }   // can't order what isn't in stock
-      var qty = Math.min(item.qty, product.stock);
-      if (qty !== item.qty) { App.Cart.setQty(product.id, qty); }
-      out.push({ product: product, qty: qty });
+      var colorId = item.colorId || product.defaultColorId || (product.colors && product.colors[0] && product.colors[0].id);
+      var colorObj = (product.colors || []).filter(function (c) { return c.id === colorId; })[0];
+
+      var stock = colorObj ? colorObj.stockCount : product.stock;
+      var inStock = colorObj ? (colorObj.inStock && stock > 0) : (product.stock > 0);
+
+      if (!inStock) { return; }   // can't order what isn't in stock
+      var qty = Math.min(item.qty, stock);
+      if (qty !== item.qty) { App.Cart.setQty(product.id, qty, colorId); }
+      out.push({ product: product, colorId: colorId, colorObj: colorObj, qty: qty });
     });
     return out;
   }
@@ -63,13 +69,17 @@
 
   function itemHtml(line) {
     var p = line.product;
+    var colorObj = line.colorObj;
+    var itemImg = colorObj ? colorObj.image : p.image;
+    var colorBadge = colorObj ? (' <span style="color:var(--indigo-600); font-weight:600;">(' + ui.esc(colorObj.label) + ')</span>') : '';
+
     return (
       '<div class="co-item">' +
-        '<span class="co-item__media"><img src="' + ui.esc(p.image) + '" alt="" loading="lazy" />' +
+        '<span class="co-item__media"><img src="' + ui.esc(itemImg) + '" data-fallback="' + ui.esc(p.image) + '" alt="" loading="lazy" />' +
           '<span class="co-item__qty" aria-hidden="true">' + line.qty + "</span>" +
         "</span>" +
         '<span class="co-item__info">' +
-          '<span class="co-item__name">' + ui.esc(p.name) + "</span>" +
+          '<span class="co-item__name">' + ui.esc(p.name) + colorBadge + "</span>" +
           '<span class="co-item__unit">' + line.qty + " × " + ui.money(p.price) + "</span>" +
         "</span>" +
         '<span class="co-item__total">' + ui.money(p.price * line.qty) + "</span>" +
@@ -243,7 +253,7 @@
         postal: document.getElementById("coPostal").value.trim()
       },
       items: lines.map(function (l) {
-        return { id: l.product.id, qty: l.qty };
+        return { id: l.product.id, colorId: l.colorId || null, qty: l.qty };
       })
     };
 

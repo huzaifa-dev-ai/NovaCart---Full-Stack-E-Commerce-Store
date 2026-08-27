@@ -14,6 +14,19 @@
 
 const mongoose = require("mongoose");
 
+const colorVariantSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, trim: true },
+    label: { type: String, required: true, trim: true },
+    swatchHex: { type: String, required: true, trim: true },
+    image: { type: String, required: true, trim: true },
+    gallery: { type: [String], default: [] },
+    inStock: { type: Boolean, default: true },
+    stockCount: { type: Number, default: 0, min: 0 }
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     id: {
@@ -61,6 +74,17 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Image path is required"],
       trim: true
+    },
+
+    defaultColorId: {
+      type: String,
+      default: null,
+      trim: true
+    },
+
+    colors: {
+      type: [colorVariantSchema],
+      default: []
     },
 
     shortDescription: {

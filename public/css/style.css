@@ -177,6 +177,32 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 .site-header.is-stuck { box-shadow: var(--shadow-md); background: var(--slate-900); }
 
+/* Out of the way while reading down the page, back on the way up. Transform
+   and opacity only, so the browser can composite it without re-laying out the
+   page beneath. */
+.site-header {
+  transition:
+    transform .9s var(--ease),
+    opacity .9s var(--ease),
+    background-color .2s var(--ease),
+    box-shadow .2s var(--ease);
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  /* Invisible, so it should not swallow clicks meant for the page behind it.
+     It stays focusable on purpose — main.js reveals it on focusin, which is
+     what a keyboard user tabbing up into it needs. */
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* main.js also stops hiding it under this preference; this covers the
+     is-stuck restyle so nothing eases either. */
+  .site-header { transition: none; }
+}
+
 .header__inner {
   height: var(--header-h);
   display: flex;
@@ -186,23 +212,47 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 
 /* Brand */
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--white); }
+/* Holds the logo artwork, which brings its own navy tile and rounding — so
+   no background or padding here, only the frame and a matching clip in case
+   the file is ever swapped for one with square corners. */
 .brand__mark {
   width: 38px; height: 38px;
-  display: grid; place-items: center;
   border-radius: 10px;
-  background: var(--indigo-600);
-  color: var(--white);
-  box-shadow: var(--shadow-accent);
+  overflow: hidden;
   flex-shrink: 0;
+  /* Tinted to the artwork's own navy, so a slow load shows the right shape
+     rather than a bright indigo square that then changes colour. */
+  background: #020829;
 }
-.brand__mark svg { width: 21px; height: 21px; }
-.brand__text {
-  font-size: 1.3rem;
-  font-weight: 800;
-  letter-spacing: -.03em;
+
+.brand__mark img {
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;
+}
+/* The wordmark — header, footer and the auth pages all share this, so the
+   logo cannot end up looking like two different brands.
+
+   Fraunces is the store's display face and is already loaded on every page.
+   It is a variable font served at weights 400..640, so asking for 800 would
+   simply clamp; naming 640 states the real top of the range instead of
+   relying on that. */
+.brand__text,
+.authx__brandtext {
+  font-family: var(--font-display, Georgia, "Times New Roman", serif);
+  font-optical-sizing: auto;
+  font-weight: 640;
+  /* A serif needs less negative tracking than the sans did at this size. */
+  letter-spacing: -.015em;
   color: var(--white);
 }
-.brand__accent { color: var(--indigo-500); }
+
+.brand__text { font-size: 1.3rem; }
+
+/* Light enough to hold against the slate header AND a lit photograph, which
+   the previous --indigo-500 was not. */
+.brand__accent,
+.authx__brandtext span { color: #A5B4FC; }
 
 /* Nav */
 .nav { margin-left: auto; }
@@ -891,11 +941,17 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 
 .pdp__media {
+  position: relative;          /* containing block for the crossfade layer */
+  isolation: isolate;          /* keep the stack self-contained */
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+
+  --pdp-swap-dur: 320ms;                              /* keep in sync with FADE_MS */
+  --pdp-swap-settle: cubic-bezier(.16, .84, .44, 1);  /* decelerate into place */
+  --pdp-swap-accent: var(--indigo-600);               /* replaced per swatch at swap time */
 }
 .pdp__media img {
   width: 100%;
@@ -903,6 +959,79 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   object-fit: cover;
   display: block;
 }
+
+/* The incoming colour. Sits exactly on top of #pdpMainImage, is only ever
+   revealed once its bitmap is decoded, and hands its image back to the real
+   <img> when it lands. Opacity and transform only, so it stays on the
+   compositor and never triggers layout.
+
+   Specificity: img.pdp__media-layer (0,2,1) has to out-rank .pdp__media img
+   (0,1,1) above, or that aspect-ratio wins and the layer loses its height. */
+.pdp__media img.pdp__media-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;                /* follows the box at every breakpoint */
+  z-index: 1;
+  opacity: 0;
+  transform: scale(1.024);     /* only ever ABOVE 1: object-fit is cover, so
+                                  scaling up crops, scaling down would expose
+                                  the frame behind the photo */
+  transform-origin: 50% 50%;
+  pointer-events: none;        /* right-click and drag reach the real img */
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+  transition:
+    opacity   var(--pdp-swap-dur) var(--ease),
+    transform var(--pdp-swap-dur) var(--pdp-swap-settle);
+}
+/* Same duration on both properties on purpose: they land in the same frame, so
+   the single opacity transitionend is a safe signal that the swap is done. */
+.pdp__media img.pdp__media-layer.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+/* One flushed frame with transitions off, to cancel a running fade. */
+.pdp__media img.pdp__media-layer.is-instant { transition: none; }
+
+/* A whisper of the colour you just picked, around the frame, while it arrives.
+   Tinted with the swatch's own hex rather than a fixed accent so the frame
+   carries the choice — which is what makes the swap legible when two variants
+   are nearly the same colour. Only opacity animates; the shadow is static. */
+.pdp__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  /* Older engines drop the whole declaration on an unknown value, so the plain
+     accent glow is stated first and the tinted one only replaces it where
+     color-mix() is understood. */
+  box-shadow:
+    inset 0 0 0 1px var(--pdp-swap-accent),
+    inset 0 0 22px rgba(79, 70, 229, .18);
+  box-shadow:
+    inset 0 0 0 1px var(--pdp-swap-accent),
+    inset 0 0 22px color-mix(in srgb, var(--pdp-swap-accent) 30%, transparent);
+  opacity: 0;
+  transition: opacity var(--pdp-swap-dur) var(--ease);
+}
+.pdp__media.is-swapping::after { opacity: .85; }
+
+/* Cut straight to the new image: no fade, no scale, no ring. The script still
+   waits for the decode, so it is still never shown half-drawn - it just
+   appears, complete, the moment it is ready. The site-wide reduce block below
+   crushes durations already but cannot remove a transform, so say it here.
+   1ms rather than 0 keeps transitionend firing; the watchdog covers 0 anyway. */
+@media (prefers-reduced-motion: reduce) {
+  .pdp__media img.pdp__media-layer {
+    transform: none !important;
+    transition-duration: 1ms !important;
+  }
+  .pdp__media::after { display: none; }
+}
+
 
 .pdp__category {
   font-size: .78rem;
@@ -1487,6 +1616,73 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 .co-payment-note svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px; color: var(--indigo-600); }
 
+/* Payment method selector */
+.pm-options {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pm-card {
+  display: block;
+  cursor: pointer;
+  border: 1.5px solid var(--slate-200);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--white);
+  transition: all .2s var(--ease);
+  position: relative;
+}
+.pm-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.pm-card:hover {
+  border-color: var(--indigo-300);
+  background: var(--slate-50);
+}
+.pm-card.is-selected {
+  border-color: var(--indigo-600);
+  background: var(--indigo-50);
+  box-shadow: 0 0 0 1px var(--indigo-600);
+}
+.pm-card__inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pm-card__badge {
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--slate-800);
+  color: var(--white);
+  flex-shrink: 0;
+}
+.pm-card__badge.jc-badge {
+  background: #D97706; /* JazzCash amber/red branding accent */
+  color: #FFFFFF;
+}
+.pm-card__badge.ep-badge {
+  background: #059669; /* Easypaisa green branding accent */
+  color: #FFFFFF;
+}
+.pm-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pm-card__info strong {
+  font-size: .92rem;
+  color: var(--text-strong);
+}
+.pm-card__info span {
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+
 /* Summary mini-items */
 .co-items { display: grid; gap: 14px; margin-bottom: 20px; }
 
@@ -1789,6 +1985,997 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   .auth-main { padding: 40px 20px 64px; }
 }
 
+/* ---------- 8f-2. Google Sign-In button ---------- */
+
+/* Google's brand guidelines ask for the mark on a white or neutral
+   surface, so this stays outside the indigo accent scale on purpose --
+   people recognise the button by its familiar look, and making it match
+   our palette would cost more in trust than it gains in tidiness. */
+.auth-federated { margin-bottom: 22px; }
+
+.btn--google {
+  --btn-fg: var(--slate-700);
+  --btn-bd: var(--slate-300);
+  background: var(--white);
+  gap: 12px;
+  font-weight: 600;
+}
+
+.btn--google:hover {
+  --btn-bd: var(--slate-400, #94A3B8);
+  background: var(--slate-50, #F8FAFC);
+}
+
+.btn--google:active { transform: translateY(1px); }
+
+.btn__gmark {
+  width: 18px;
+  height: 18px;
+  flex: none;                    /* never squash the logo on a narrow card */
+}
+
+/* "or sign in with email" -- a rule either side of centred text, drawn
+   with borders on the pseudo-elements so it stays crisp at any width. */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 4px;
+  font-size: .8125rem;
+  color: var(--slate-500);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 0;
+  border-top: 1px solid var(--slate-200);
+}
+
+.auth-divider span { flex: none; }
+
+/* Belt and braces: [hidden] already hides a block element, but a stray
+   `display` rule matching .auth-federated later would silently reveal a
+   button that cannot work. */
+.auth-federated[hidden] { display: none; }
+
+/* ---------- 8f-3. Reset page, arriving with an address ---------- */
+
+/* js/reset-precheck.js sets .reset-pending on <html> from the <head>, before
+   anything paints, when the sign-in form handed an address over. Doing this
+   in CSS rather than JS is the whole point: by the time DOMContentLoaded
+   fires the form has already been laid out, and hiding it then is a visible
+   blink of "Enter your email" on every reset. */
+.reset-pending #forgotForm,
+.reset-pending #fpSub { display: none; }
+
+/* Belt and braces — js/reset-precheck.js also clears the [hidden] attribute,
+   which a plain author rule cannot outrank. */
+.reset-pending #otpStage { display: block; }
+
+/* ---------- 8f-4. One-time code ---------- */
+
+.otp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: var(--slate-50, #F8FAFC);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.otp-note__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #ECFDF5;
+  color: var(--success);
+}
+
+.otp-note__icon svg { width: 17px; height: 17px; }
+
+.otp-note p {
+  margin: 0;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  /* An email address has no spaces to break at, so a long one would
+     otherwise push the card wider than its column. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Monospaced and widely spaced, so six digits are easy to check against
+   the email rather than being read as one long number. */
+.otp-input {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: .5em;
+  /* The tracking is applied after the last digit too, which visually shifts
+     the group left. Half a step of padding puts it back in the middle. */
+  text-indent: .5em;
+  text-align: center;
+}
+
+.otp-input::placeholder {
+  color: var(--slate-300);
+  letter-spacing: .5em;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 7px;
+  font-size: .8125rem;
+  color: var(--text-muted);
+}
+
+/* The error message replaces the hint rather than stacking under it. */
+.field.is-invalid .field-hint { display: none; }
+
+/* A button that reads as a link. Used where the action is not navigation —
+   `disabled` then does the right thing for free, which an <a> cannot. */
+.linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--indigo-600);
+  cursor: pointer;
+}
+
+.linkbtn:hover:not(:disabled) { text-decoration: underline; }
+
+.linkbtn:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  /* Not greyed into illegibility: the countdown inside it is the whole point,
+     so it has to stay readable while it waits. */
+  font-weight: 600;
+}
+
+/* =============================================================
+   8f-5. Sign in / Create account
+   -------------------------------------------------------------
+   A single card floating on a photograph of a desk, rather than
+   the site's usual chrome. These pages ask one question, so the
+   navigation is reduced to a wordmark back to the store.
+
+   Everything is namespaced under .authx. The forms still carry
+   .field / .field-error / .check / .pw-toggle because the shared
+   auth-page.js drives them by those hooks; the rules below only
+   re-dress them for a dark card.
+   ============================================================= */
+
+.authx {
+  min-height: 100vh;
+  min-height: 100dvh;          /* dodges the mobile URL bar */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  /* Shows through until the photo loads, so the card never lands on white. */
+  background-color: var(--slate-700);
+}
+
+/* The photo is fixed and cover-sized, so the card floats over a scene rather
+   than a texture that scrolls with it. background-color above shows through
+   until it loads, so the card never lands on white. */
+.authx::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("../assets/images/auth-bg.jpg") center / cover no-repeat;
+}
+
+/* The photo stays bright — the card is the dark object on this page. So the
+   scrim is light: just enough at the top for the white wordmark to hold, and a
+   soft vignette so the edges settle rather than competing with the card. */
+.authx::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .52) 0%, rgba(15, 23, 42, .10) 28%, rgba(15, 23, 42, 0) 58%),
+    radial-gradient(115% 85% at 50% 50%, rgba(15, 23, 42, 0) 40%, rgba(15, 23, 42, .30) 100%);
+}
+
+/* ---------- Wordmark ---------- */
+
+.authx__brand {
+  position: absolute;
+  top: 26px;
+  left: 30px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+}
+
+.authx__brandmark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  overflow: hidden;
+  flex: none;
+  background: #020829;
+  /* Sits on a photograph, so it keeps a lift the header mark does not need. */
+  box-shadow: 0 6px 18px rgba(2, 8, 41, .55);
+}
+
+.authx__brandmark img {
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* Font, weight and colour come from the shared wordmark rule above. Only the
+   two things that are specific to sitting on a photograph live here. */
+.authx__brandtext {
+  font-size: 1.12rem;
+  /* What is behind it depends on the crop, so it carries its own contrast
+     rather than trusting the scrim. */
+  text-shadow: 0 1px 14px rgba(15, 23, 42, .85), 0 1px 3px rgba(15, 23, 42, .6);
+}
+
+/* The artwork cannot be recoloured, so the hover cue is a lift instead. */
+.authx__brandmark { transition: transform .18s var(--ease); }
+.authx__brand:hover .authx__brandmark { transform: translateY(-1px) scale(1.04); }
+
+/* ---------- The card ---------- */
+
+.authx__stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 96px 20px 48px;      /* top clears the absolute wordmark */
+}
+
+.authx__card {
+  width: 100%;
+  max-width: 396px;
+  padding: 38px 34px 30px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  /* Nearly opaque, not translucent: text legibility over a photograph is not
+     worth trading for the glass effect. The blur is what suggests depth. */
+  background: rgba(15, 23, 42, .93);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 30px 70px rgba(2, 6, 23, .55),
+    0 2px 0 rgba(255, 255, 255, .06) inset;
+  text-align: center;
+}
+
+.authx__badge {
+  display: grid;
+  place-items: center;
+  width: 54px; height: 54px;
+  margin: 0 auto 18px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, var(--indigo-500), var(--indigo-700));
+  color: var(--white);
+  box-shadow: 0 10px 26px rgba(79, 70, 229, .38);
+}
+
+.authx__badge svg { width: 26px; height: 26px; }
+
+/* The sign-in card leads with the brand itself, so its badge holds the logo
+   rather than a glyph. The other auth cards keep an icon that says what you
+   are doing there, which is what tells them apart at a glance. */
+.authx__badge:has(img) {
+  background: #020829;
+  /* The artwork is dark navy on a dark card, where the old indigo tile was a
+     bright focal point. A defined rim and a deeper halo give it back the
+     separation the gradient used to provide. */
+  border-color: rgba(255, 255, 255, .14);
+  overflow: hidden;
+  box-shadow:
+    0 14px 34px rgba(79, 70, 229, .34),
+    0 0 0 4px rgba(99, 102, 241, .10);
+}
+.authx__badge img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.authx__title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--white);
+}
+
+.authx__sub {
+  margin: 0 0 26px;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--slate-400);
+}
+
+/* ---------- Floating-label fields ---------- */
+
+.authx .field {
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.ffield { position: relative; }
+
+.ffield input {
+  width: 100%;
+  padding: 22px 0 9px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .20);
+  border-radius: 0;
+  background: transparent;
+  font-size: .9375rem;
+  color: var(--white);
+  transition: border-color .18s var(--ease);
+}
+
+.ffield--password input { padding-right: 38px; }
+
+.ffield input:focus {
+  outline: none;
+  border-bottom-color: var(--indigo-500);
+}
+
+/* The label doubles as the placeholder until the field is used, which is why
+   every input carries placeholder=" ": :placeholder-shown is the only pure-CSS
+   way to know whether the box is empty, and a real <label> keeps the field
+   named for screen readers once it floats away. */
+.ffield label {
+  position: absolute;
+  left: 0;
+  top: 21px;
+  font-size: .9375rem;
+  color: var(--slate-400);
+  pointer-events: none;
+  transition: top .16s var(--ease), font-size .16s var(--ease), color .16s var(--ease);
+}
+
+.ffield input:focus + label,
+.ffield input:not(:placeholder-shown) + label {
+  top: 1px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--indigo-500);
+}
+
+/* Autofill masking lives in section 8f-6, after the focus glow — see the
+   note there for why it cannot sit here. */
+
+.authx .field-error {
+  display: none;
+  margin-top: 6px;
+  font-size: .78rem;
+  color: #FCA5A5;
+}
+
+.authx .field.is-invalid .field-error { display: block; }
+.authx .field.is-invalid input { border-bottom-color: #F87171; }
+.authx .field.is-invalid label { color: #FCA5A5; }
+
+/* ---------- Reveal password ---------- */
+
+.authx .pw-toggle {
+  position: absolute;
+  right: 0;
+  top: 20px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: var(--slate-400);
+  cursor: pointer;
+}
+
+.authx .pw-toggle:hover { color: var(--white); }
+/* No display here: .pw-toggle__on/__off already swap on [aria-pressed], and a
+   blanket display:block would show both eyes at once. */
+.authx .pw-toggle svg { width: 18px; height: 18px; }
+
+/* ---------- The one-time code box ---------- */
+/* Not a floating label: this input has a real placeholder ("000000") showing
+   the format, so :placeholder-shown never flips and the label would sit on
+   top of it. A plain label above the box is the honest answer. */
+
+.authx .ffield-static label,
+.authx .field:not(.ffield) > label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate-400);
+}
+
+.authx .otp-input {
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+  color: var(--white);
+}
+
+.authx .otp-input:focus {
+  outline: none;
+  border-color: var(--indigo-500);
+  background: rgba(99, 102, 241, .10);
+}
+
+.authx .otp-input::placeholder { color: rgba(255, 255, 255, .22); }
+
+.authx .otp-note {
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .12);
+}
+
+.authx .otp-note p { color: var(--slate-300); }
+.authx .otp-note strong { color: var(--white); }
+.authx .field-hint { color: var(--slate-500); }
+.authx .auth-note { color: var(--slate-400); }
+.authx .auth-foot { color: var(--slate-400); }
+.authx .auth-foot a { color: var(--indigo-500); font-weight: 700; }
+
+/* The success panel after a completed reset. */
+.authx .form-success h2 { color: var(--white); }
+.authx .form-success p { color: var(--slate-400); }
+
+/* ---------- Close ---------- */
+
+/* The reset pages are a detour from signing in, so they get a way out in the
+   corner rather than a line of text at the bottom. The card had no positioning
+   context of its own, so it gets one here. */
+.authx__card { position: relative; }
+
+.authx__close {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--slate-400);
+  text-decoration: none;
+  transition: color .16s var(--ease), background-color .16s var(--ease);
+}
+
+.authx__close svg { width: 17px; height: 17px; }
+
+.authx__close:hover,
+.authx__close:focus-visible {
+  color: var(--white);
+  background: rgba(255, 255, 255, .07);
+}
+
+/* The badge is centred in the card, so a 32px control in the corner would
+   otherwise overlap it on the narrowest screens. */
+@media (max-width: 380px) {
+  .authx__close { top: 10px; left: 10px; }
+}
+
+/* ---------- The code step, tightened ---------- */
+/* Three restatements had accumulated here — a note, a label and a hint — plus
+   a divider above the resend line and another above the footer. The note is
+   the one that carries the information, so it stays and the rest gives way. */
+
+.authx .otp-note {
+  gap: 10px;
+  /* The subtitle that normally separates these two is hidden on this step
+     (js/reset-precheck.js + .reset-pending), so without a top margin here the
+     heading and the note read as a single block. */
+  margin-top: 22px;
+  margin-bottom: 18px;
+  padding: 11px 13px;
+  border-radius: 12px;
+}
+
+.authx .otp-note__icon { width: 26px; height: 26px; }
+.authx .otp-note__icon svg { width: 14px; height: 14px; }
+
+.authx .otp-note p {
+  font-size: .8125rem;
+  line-height: 1.5;
+  /* The card centres its contents, which leaves a two-line sentence ragged on
+     both edges. A sentence beside an icon should start where the icon does. */
+  text-align: left;
+}
+
+/* The label sits directly above a box whose placeholder already shows the
+   shape of what goes in it, so it can be quieter. */
+.authx #otpForm > .field > label {
+  margin-bottom: 7px;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--slate-500);
+}
+
+/* Still unmistakably a code box, just no longer the tallest thing on screen. */
+/* The label already separates the box from the note above, so the field does
+   not need the shell's default bottom margin as well. */
+.authx #otpForm > .field { margin-bottom: 0; }
+.authx #otpForm > .btn { margin-top: 18px; }
+
+.authx .otp-input {
+  padding: 11px 12px;
+  font-size: 1.32rem;
+  letter-spacing: .38em;
+  text-indent: .38em;
+  border-radius: 11px;
+}
+
+/* No rule of its own: the footer beneath already draws one. */
+.authx .otp-resend {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: .8125rem;
+  color: var(--slate-400);
+}
+
+/* The footer's own gap can close up now that it follows a short line rather
+   than a second divider. */
+.authx #otpStage + .authx__foot,
+.authx .otp-resend ~ .authx__foot { margin-top: 16px; padding-top: 14px; }
+
+/* ---------- Strength meter ---------- */
+/* The .pw-strength component already exists; these only re-tint its unfilled
+   segments and neutral label for a dark card. The score colours stay as they
+   are — red through green means the same thing on any background. */
+
+.authx .pw-strength { margin: 12px 0 4px; }
+.authx .pw-strength__seg { background: rgba(255, 255, 255, .14); }
+.authx .pw-strength__label { color: var(--slate-400); }
+.authx .pw-strength[data-score="2"] .pw-strength__label { color: #FCD34D; }
+
+/* ---------- Checkboxes ---------- */
+
+.authx .check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: .8125rem;
+  line-height: 1.5;
+  color: var(--slate-300);
+  text-align: left;
+  cursor: pointer;
+}
+
+.authx .check input {
+  flex: none;
+  margin-top: 1px;
+  width: 15px; height: 15px;
+  accent-color: var(--indigo-600);
+}
+
+.check--terms { margin: 16px 0 20px; }
+
+/* ---------- Row: remember me / forgot ---------- */
+
+.authx__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 18px 0 22px;
+  flex-wrap: wrap;
+}
+
+.authx__link {
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--indigo-500);
+  text-decoration: none;
+}
+
+.authx__link:hover { text-decoration: underline; }
+
+/* ---------- Buttons ---------- */
+
+.btn--pill { border-radius: 999px; }
+
+/* Breathing room where a form runs straight from its last field into the
+   submit button, with no checkbox row between them. */
+.authx form > .btn { margin-top: 22px; }
+.authx form > .check + .btn,
+.authx form > .authx__row + .btn { margin-top: 0; }
+
+.authx .btn--accent {
+  box-shadow: 0 10px 26px rgba(79, 70, 229, .34);
+}
+
+/* Google's mark needs a light surface, so this one button stays white while
+   everything around it is dark. */
+.authx .btn--google {
+  --btn-fg: var(--slate-800);
+  --btn-bd: transparent;
+  background: var(--white);
+  border-radius: 999px;
+}
+
+/* The mark scales with the button so its optical weight stays right. */
+.authx .btn--google .btn__gmark { width: 17px; height: 17px; }
+
+.authx .btn--google:hover {
+  --btn-bd: transparent;
+  background: var(--slate-100);
+}
+
+.authx .auth-federated { margin-bottom: 4px; }
+
+.authx .auth-divider {
+  margin: 20px 0 2px;
+  font-size: .78rem;
+  color: var(--slate-500);
+}
+
+.authx .auth-divider::before,
+.authx .auth-divider::after { border-top-color: rgba(255, 255, 255, .13); }
+
+/* ---------- Alert ---------- */
+
+.authx .auth-alert {
+  text-align: left;
+  border-color: rgba(248, 113, 113, .34);
+  background: rgba(127, 29, 29, .30);
+  color: #FECACA;
+}
+
+.authx .auth-alert svg { color: #FCA5A5; }
+
+/* ---------- Footer line ---------- */
+
+.authx__foot {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, .09);
+  font-size: .8125rem;
+  color: var(--slate-400);
+}
+
+.authx__foot a {
+  font-weight: 700;
+  color: var(--indigo-500);
+  text-decoration: none;
+}
+
+.authx__foot a:hover { text-decoration: underline; }
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 480px) {
+  .authx__brand { top: 18px; left: 18px; }
+  .authx__stage { padding: 78px 14px 30px; }
+
+  .authx__card {
+    padding: 30px 22px 24px;
+    border-radius: 18px;
+  }
+
+  .authx__title { font-size: 1.32rem; }
+}
+
+/* A tall card on a short screen (landscape phones) must be able to scroll
+   rather than centre itself out of view. */
+@media (max-height: 720px) {
+  .authx__stage { align-items: start; }
+}
+
+/* =============================================================
+   8f-6. Sign in / Create account — polish layer
+   -------------------------------------------------------------
+   Appended after 8f-5 on purpose: several rules here restate a
+   selector from that section, and win by source order rather than
+   by inflating specificity.
+
+   The background photo already carries its warm bloom, colour
+   grade and vignette (baked at build time in the asset itself),
+   so the scrim below is deliberately light — layering a second
+   vignette in CSS was crushing the photo to mud.
+   ============================================================= */
+
+/* ---------- Atmosphere ---------- */
+
+/* Light scrim only: darkness at the very top so the white wordmark holds,
+   a whisper of brand indigo, and a gentle floor. No vignette — the image
+   has one. */
+.authx::after {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .50) 0%, rgba(15, 23, 42, .10) 26%, rgba(15, 23, 42, 0) 56%),
+    radial-gradient(100% 70% at 50% 8%, rgba(99, 102, 241, .13) 0%, rgba(99, 102, 241, 0) 60%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0) 62%, rgba(15, 23, 42, .30) 100%);
+}
+
+/* ---------- Card: a lit surface, not a flat panel ---------- */
+
+.authx__card {
+  background-color: rgba(15, 23, 42, .93);
+  /* Three layers: a papery grain (inline SVG, so no extra request and no
+     CSP exposure), a cream glow at the crown matching the photo's top-left
+     light, and the slate body itself. */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E"),
+    radial-gradient(125% 80% at 50% -20%, rgba(255, 240, 220, .11) 0%, rgba(255, 240, 220, 0) 58%),
+    linear-gradient(180deg, rgba(30, 41, 59, .96) 0%, rgba(15, 23, 42, .94) 46%);
+  /* A cream top edge reads as a lit paper lip; the indigo halo ties the card
+     to the accent without tinting the surface. */
+  border-top-color: rgba(255, 240, 222, .20);
+  box-shadow:
+    0 34px 80px rgba(2, 6, 23, .58),
+    0 12px 30px -14px rgba(2, 6, 23, .50),
+    0 0 64px -26px rgba(99, 102, 241, .34),
+    0 1px 0 rgba(255, 240, 224, .13) inset;
+}
+
+/* ---------- Badge: warm glint + aurora ring ---------- */
+
+.authx__badge {
+  position: relative;
+  background:
+    radial-gradient(120% 120% at 30% 18%, rgba(255, 240, 220, .26) 0%, rgba(255, 240, 220, 0) 55%),
+    linear-gradient(145deg, var(--indigo-500), var(--indigo-700));
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow:
+    0 12px 28px rgba(79, 70, 229, .40),
+    0 1px 0 rgba(255, 240, 224, .30) inset;
+}
+
+/* A concentric ring, faded toward the bottom so it reads as light from above
+   rather than an outline. Behind the badge box, so the glyph stays crisp. */
+.authx__badge::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, .40);
+  -webkit-mask: linear-gradient(180deg, #000, transparent);
+  mask: linear-gradient(180deg, #000, transparent);
+  z-index: -1;
+}
+
+/* ---------- Type: the store's display face ---------- */
+
+.authx__title {
+  font-family: var(--font-display, Georgia, serif);
+  font-optical-sizing: auto;
+  font-weight: 560;
+  /* Trimmed so a long heading like "Reset your password" sits on one
+     comfortable line instead of dominating the card. */
+  font-size: clamp(1.18rem, 1.05rem + .6vw, 1.32rem);
+  line-height: 1.1;
+  letter-spacing: -.005em;
+  margin-bottom: 8px;
+}
+
+.authx__sub {
+  margin-bottom: 26px;
+  font-size: .8875rem;
+  line-height: 1.6;
+  letter-spacing: .006em;
+}
+
+/* ---------- Fields: leading icons ---------- */
+
+/* Pinned to a fixed top, NOT 50%. On the register card the password field's
+   container also holds an error line and a 4-segment strength meter, so a
+   centred icon would drift far below the text it belongs to. */
+.authx .ffield__icon {
+  position: absolute;
+  left: 1px;
+  top: 21px;
+  width: 18px;
+  height: 18px;
+  color: var(--slate-500);
+  pointer-events: none;
+  transition: color .16s var(--ease);
+}
+
+.authx .ffield__icon svg { width: 100%; height: 100%; display: block; }
+
+/* Only iconed fields shift, so an un-iconed field (the OTP code box) is
+   untouched and no :has() support is required. */
+.authx .ffield--icon input { padding-left: 30px; }
+.authx .ffield--icon > label { left: 30px; }
+
+/* Floating up AND back to the true edge, clearing the icon entirely. */
+.authx .ffield--icon input:focus + label,
+.authx .ffield--icon input:not(:placeholder-shown) + label { left: 0; }
+
+.authx .ffield--icon:focus-within .ffield__icon { color: var(--indigo-500); }
+.authx .field.is-invalid .ffield__icon { color: #FCA5A5; }
+
+/* The label now travels on two axes, so `left` joins the eased set. */
+.authx .ffield label {
+  transition: top .16s var(--ease), left .16s var(--ease),
+              font-size .16s var(--ease), letter-spacing .16s var(--ease),
+              color .16s var(--ease);
+}
+
+.authx .ffield input:focus + label,
+.authx .ffield input:not(:placeholder-shown) + label { letter-spacing: .04em; }
+
+/* box-shadow has to be in the transition list or the focus glow snaps in
+   while the border eases. */
+.authx .ffield input {
+  transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+
+.authx .ffield input:focus { box-shadow: 0 10px 22px -18px rgba(99, 102, 241, .9); }
+
+/* ---------- Autofill ---------- */
+
+/* Chrome paints an opaque background on an autofilled field, which would wipe
+   out the card behind it. A 60px inset shadow covers that; there is no
+   supported way to set the background directly.
+
+   This MUST come after the focus rule above. That rule has the same
+   specificity as a `:-webkit-autofill:focus` selector without the .authx
+   prefix, so an earlier mask loses the moment the field takes focus — which
+   is exactly when the autofill dropdown is showing. The prefix here also
+   lifts it to (0,4,1) so it no longer depends on source order alone. */
+.authx .ffield input:-webkit-autofill,
+.authx .ffield input:-webkit-autofill:hover,
+.authx .ffield input:-webkit-autofill:focus,
+.authx .ffield input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--white);
+  -webkit-box-shadow: 0 0 0 60px #151E33 inset;
+  box-shadow: 0 0 0 60px #151E33 inset;
+  caret-color: var(--white);
+  /* Chrome crossfades its highlight in. Parking the background transition
+     stops that fade from washing over the mask on first paint. */
+  transition: background-color 6000s ease-in-out 0s;
+}
+
+/* The standard selector, in its own block: one unknown selector invalidates a
+   whole comma-separated list, so grouping these would cost us the prefixed
+   rule above on engines that lack it. */
+.authx .ffield input:autofill,
+.authx .ffield input:autofill:hover,
+.authx .ffield input:autofill:focus {
+  -webkit-text-fill-color: var(--white);
+  box-shadow: 0 0 0 60px #151E33 inset;
+  caret-color: var(--white);
+  transition: background-color 6000s ease-in-out 0s;
+}
+
+/* The leading icon and the eye sit ON the masked area, so they need a colour
+   that reads against it rather than against Chrome's default fill. */
+.authx .ffield--icon input:-webkit-autofill ~ .ffield__icon { color: var(--slate-400); }
+.authx .ffield--icon input:-webkit-autofill ~ .pw-toggle { color: var(--slate-400); }
+
+/* The eye sits on its own fixed line too, for the same reason as the icon. */
+.authx .pw-toggle { top: 19px; }
+
+/* ---------- Divider: hairline with a centred mark ---------- */
+
+.authx .auth-divider {
+  gap: 12px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+}
+
+.authx .auth-divider::before,
+.authx .auth-divider::after {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16));
+}
+
+.authx .auth-divider::after {
+  background: linear-gradient(90deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0));
+}
+
+.authx .auth-divider span::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: -1px 9px 0 0;
+  vertical-align: middle;
+  transform: rotate(45deg);
+  background: var(--indigo-500);
+  opacity: .85;
+}
+
+/* ---------- Buttons ---------- */
+
+.authx .btn--accent {
+  background: linear-gradient(180deg, var(--indigo-500), var(--indigo-600) 58%, var(--indigo-700));
+  border-color: transparent;
+  /* Matched to the Google button above it, so the pair reads as one stack.
+     The hierarchy is carried by fill instead of size — an indigo gradient
+     against a white outline already says which one is the main action. */
+  padding: 10px 22px;
+  font-size: .9rem;
+  letter-spacing: .015em;
+  box-shadow:
+    0 12px 28px -6px rgba(79, 70, 229, .48),
+    0 2px 6px rgba(2, 6, 23, .32),
+    0 1px 0 rgba(255, 255, 255, .20) inset;
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), filter .18s var(--ease);
+}
+
+.authx .btn--accent:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 18px 36px -8px rgba(79, 70, 229, .60),
+    0 3px 8px rgba(2, 6, 23, .38),
+    0 1px 0 rgba(255, 255, 255, .26) inset;
+}
+
+.authx .btn--accent:active { transform: translateY(0); }
+
+/* auth-page.js re-injects this arrow when a submit fails, so it has to be
+   styled whether or not the initial markup carried one. */
+.authx .btn__arrow {
+  display: inline-block;
+  margin-left: .35em;
+  transition: transform .18s var(--ease);
+}
+
+.authx .btn--accent:hover .btn__arrow { transform: translateX(3px); }
+
+/* The one white element on the card needs a shadow to sit rather than float. */
+.authx .btn--google {
+  /* Slimmer than the primary CTA it sits above. .btn--lg pitches both at 56px,
+     which gave a secondary action the same weight as "Sign In"; trimming the
+     vertical padding restores the hierarchy and keeps the full card width. */
+  padding: 10px 22px;
+  font-size: .9rem;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, .30);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), background-color .18s var(--ease);
+}
+
+.authx .btn--google:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, .38);
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes authx-rise  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes authx-badge { from { opacity: 0; transform: scale(.9); }        to { opacity: 1; transform: none; } }
+
+.authx__card  { animation: authx-rise .5s var(--ease) both; }
+.authx__badge { animation: authx-badge .45s var(--ease) .08s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .authx__card,
+  .authx__badge { animation: none; }
+
+  .authx .ffield label,
+  .authx .ffield__icon,
+  .authx .ffield input,
+  .authx .btn--accent,
+  .authx .btn--google,
+  .authx .btn__arrow { transition: none; }
+
+  .authx .btn--accent:hover,
+  .authx .btn--google:hover { transform: none; }
+}
+
+/* Fraunces needs its own size ramp on a narrow card — the 8f-5 rule above
+   was tuned for the old Inter headline. */
+@media (max-width: 480px) {
+  .authx__title { font-size: clamp(1.1rem, 1rem + 1.8vw, 1.24rem); }
+}
+
 /* ---------- 8g. Header account menu ---------- */
 .account { position: relative; }
 
@@ -1825,6 +3012,24 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   flex-shrink: 0;
 }
 .account__btn:hover .account__avatar { background: var(--slate-900); }
+
+/* A Google photo fills the same circle the initial occupies, so the header
+   never shifts depending on whether someone has one. */
+.account__avatar--photo {
+  background: none;
+  overflow: hidden;
+  /* A faint ring keeps a light photo from bleeding into the dark header. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+}
+
+.account__avatar--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;      /* non-square photos crop rather than squash */
+  display: block;
+}
+
+.account__btn:hover .account__avatar--photo { background: none; }
 .account__caret { width: 13px; height: 13px; transition: transform .2s var(--ease); }
 .account__btn[aria-expanded="true"] .account__caret { transform: rotate(180deg); }
 
@@ -1841,10 +3046,37 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-6px);
-  transition: opacity .18s var(--ease), transform .18s var(--ease), visibility .18s;
+  /* Grows out of the button it belongs to, rather than just fading in place. */
+  transform-origin: top right;
+  transform: translateY(-8px) scale(.96);
+  transition:
+    opacity .24s var(--ease),
+    transform .24s var(--ease),
+    visibility .24s;
 }
-.account__menu.is-open { opacity: 1; visibility: visible; transform: none; }
+
+.account__menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+/* The menu sits 9px below the button, and nothing occupies that gap — so a
+   pointer travelling down leaves .account and the menu closes under it. This
+   bridges the gap without moving the menu. */
+.account__menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -11px;
+  height: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account__menu { transition: opacity .12s linear, visibility .12s; transform: none; }
+  .account__menu.is-open { transform: none; }
+}
 
 .account__id {
   padding: 9px 11px 11px;
@@ -2532,12 +3764,796 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 .toast.is-visible { transform: translate(-50%, 0); opacity: 1; }
 
 /* ---------- 11. Reveal on scroll ---------- */
-.reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity .55s var(--ease), transform .55s var(--ease);
-}
+/* =============================================================
+   11b. Scroll animations, one per page
+   -------------------------------------------------------------
+   main.js picks a variant from the filename, puts it on
+   <body data-anim="…">, and tags that page's content with
+   .reveal. Each block below owns one page.
+
+   The class is applied at runtime on purpose: none of these
+   rules can hide anything unless the script ran, so a page
+   never ships blank.
+
+   --i carries the element's position within its own parent, so
+   stagger restarts per group instead of counting across a page.
+   ============================================================= */
+
+/* The shared resting state. Variants below override it. */
+.reveal { opacity: 0; transform: translateY(18px);
+          transition: opacity .55s var(--ease), transform .55s var(--ease); }
 .reveal.is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Belt to the tagger's braces: it already declines to add the class at all
+     under this preference, but a cached page or a mid-session change must
+     never leave content stranded at opacity 0. */
+  .reveal, .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* 404.html  ->  data-anim="strayed"
+   A 404 is something that arrived at the wrong place, so the panel lands slightly off-axis and undersized, then straightens itself and its contents catch up — an apology in motion, on a page too short to scroll. */
+/* ============================================================
+   404.html — data-anim="strayed"
+   The panel arrives small and 1.5deg off-course, then straightens
+   on a back-out curve; its contents catch up behind it.
+   ============================================================ */
+[data-anim="strayed"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+  transition-delay: calc(240ms + var(--i, 0) * 75ms);
+}
+[data-anim="strayed"] .reveal.is-visible { opacity: 1; transform: none; }
+
+/* The panel itself: undersized and askew, straightening with a curve that
+   slightly overshoots the interpolation rather than the scale. */
+[data-anim="strayed"] .co-success.reveal {
+  transform: translate3d(0, 26px, 0) scale(.93) rotate(-1.5deg);
+  transform-origin: 50% 30%;
+  transition: opacity .50s var(--ease),
+              transform .72s cubic-bezier(.22, 1.45, .36, 1);
+  transition-delay: 0ms;
+  will-change: transform, opacity;
+}
+[data-anim="strayed"] .co-success.reveal.is-visible {
+  transform: none;
+  will-change: auto;
+}
+
+/* Our .is-visible rule (0,3,0) outranks the shared `.btn:hover` lift at
+   style.css:133, so the two CTAs need their hover state handed back. */
+[data-anim="strayed"] .btn.reveal.is-visible:hover  { transform: translateY(-2px); }
+[data-anim="strayed"] .btn.reveal.is-visible:active { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Also drops the hover lift on this page, which is the correct reading of
+     "no movement at all" under the preference. */
+  [data-anim="strayed"] .reveal,
+  [data-anim="strayed"] .reveal.is-visible,
+  [data-anim="strayed"] .co-success.reveal,
+  [data-anim="strayed"] .co-success.reveal.is-visible,
+  [data-anim="strayed"] .btn.reveal.is-visible:hover,
+  [data-anim="strayed"] .btn.reveal.is-visible:active {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+    transition: none;
+    transition-delay: 0s;
+  }
+}
+
+/* about.html  ->  data-anim="broadsheet"
+   About is the one page that is purely read, so the copy literally pulls itself into focus out of a soft blur while the three value cards hinge up off the page like printed panels being set down. */
+/* ============================================================
+   about.html — data-anim="broadsheet"
+   Editorial copy pulls into focus as you read down the page; the
+   three value cards hinge up from their own bottom edge.
+   transform / opacity / filter only — nothing here triggers layout.
+   ============================================================ */
+[data-anim="broadsheet"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  filter: blur(5px);
+  transition:
+    opacity   .60s var(--ease),
+    transform .60s var(--ease),
+    filter    .60s var(--ease);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+[data-anim="broadsheet"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  will-change: auto;
+}
+
+/* The value cards hinge up around their own bottom edge. rotateX moves
+   pixels on the Y/Z axes only, so a card's horizontal footprint is
+   identical at 9deg and at 0deg. */
+[data-anim="broadsheet"] .value-card.reveal {
+  transform: perspective(900px) rotateX(9deg) translate3d(0, 26px, 0);
+  transform-origin: 50% 100%;
+  filter: blur(4px);
+  transition-duration: .68s;
+  transition-delay: calc(var(--i, 0) * 90ms);
+  will-change: transform, opacity, filter;
+}
+[data-anim="broadsheet"] .value-card.reveal.is-visible {
+  transform: perspective(900px) rotateX(0deg) translate3d(0, 0, 0);
+  filter: blur(0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The sitewide reset in section 11 only reaches bare `.reveal` (0,1,0),
+     so every rule above has to be undone at its own specificity. */
+  [data-anim="broadsheet"] .reveal,
+  [data-anim="broadsheet"] .reveal.is-visible,
+  [data-anim="broadsheet"] .value-card.reveal,
+  [data-anim="broadsheet"] .value-card.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    will-change: auto;
+    transition: none;
+    transition-delay: 0s;
+  }
+}
+
+/* admin.html  ->  data-anim="console"
+   A five-panel dashboard is an instrument readout coming online, so blocks resolve into focus fast and settle — the stat tiles get the one flourish, and every table reveals as a single block so a 50-row result set animates exactly as cheaply as an empty one. */
+/* ============================================================
+   admin.html — <body data-anim="console">
+   The dashboard comes online: blocks resolve into focus. A table
+   reveals as ONE element regardless of row count, so cost is fixed
+   no matter how much data loads — never tag <tr> here.
+   .admin-side / .admin-tab are excluded on purpose: it is a <nav>
+   and it is position:sticky, which a transform would break.
+   ============================================================ */
+
+[data-anim="console"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition:
+    opacity   .30s var(--ease),
+    transform .34s cubic-bezier(.2, .7, .3, 1);
+  transition-delay: calc(min(var(--i, 0), 4) * 35ms);  /* 140ms tail, max */
+}
+[data-anim="console"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Panel heads arrive from the gutter side. -10px against a 24px
+   (18px ≤560px) container gutter: the shifted box stays inside the
+   padding box at every width. */
+[data-anim="console"] .admin-head.reveal {
+  transform: translate3d(-10px, 0, 0);
+}
+[data-anim="console"] .admin-head.reveal.is-visible {
+  transform: none;
+}
+
+/* Stat tiles are the one place per-item motion earns its keep: six
+   small fixed-size boxes pulling into focus. blur() is confined to
+   them and never applied to a table wrap, where a large blurred
+   layer would be costly to repaint. */
+[data-anim="console"] .admin-stat.reveal {
+  transform: translate3d(0, 8px, 0) scale(.972);
+  transform-origin: 50% 100%;
+  filter: blur(4px);
+  transition:
+    opacity   .30s var(--ease),
+    transform .38s cubic-bezier(.2, .7, .3, 1),
+    filter    .38s var(--ease);
+  will-change: opacity, transform, filter;
+}
+[data-anim="console"] .admin-stat.reveal.is-visible {
+  transform: none;
+  filter: blur(0);      /* blur(0), not none — guarantees interpolation */
+  will-change: auto;
+}
+
+/* Toolbars and tables: a single quiet 12px lift, no per-row work. */
+[data-anim="console"] .admin-toolbar.reveal,
+[data-anim="console"] .admin-table-wrap.reveal {
+  transform: translate3d(0, 12px, 0);
+}
+[data-anim="console"] .admin-toolbar.reveal.is-visible,
+[data-anim="console"] .admin-table-wrap.reveal.is-visible {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="console"] .reveal,
+  [data-anim="console"] .admin-head.reveal,
+  [data-anim="console"] .admin-stat.reveal,
+  [data-anim="console"] .admin-toolbar.reveal,
+  [data-anim="console"] .admin-table-wrap.reveal {
+    transform: none;          /* no lift, no slide, no scale */
+    filter: none;             /* no focus-pull either */
+    transition: opacity .18s linear;
+    transition-delay: 0ms;
+    will-change: auto;
+  }
+}
+
+/* cart.html  ->  data-anim="tally"
+   The cart is a running tally, so each block unrolls downward from its own top edge like a receipt line printing — calm, mechanical, and it reads top-to-bottom in the same direction the eye is already scanning toward the checkout button. */
+/* ── cart.html · data-anim="tally" ─────────────────────────────────
+   Receipt-roll: blocks unroll downward from their own top edge.
+   Only transform + opacity are touched — no layout properties.
+   See the stagger notes: #cartSummary ships with [hidden], and
+   #cartItems is rebuilt by cart-page.js, so tag after render and
+   tag each row only once. */
+
+[data-anim="tally"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scaleY(.97);
+  transform-origin: 50% 0;
+  transition:
+    opacity   .40s var(--ease),
+    transform .50s cubic-bezier(.22, .61, .36, 1);
+  transition-delay: calc(min(var(--i, 0), 8) * 55ms);
+}
+
+[data-anim="tally"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* The page head carries the <h1> in Fraunces display type — a vertical
+   squash on it is the one place the 3% scaleY is legible, so it rises
+   without unrolling. */
+[data-anim="tally"] .cart-page__head.reveal { transform: translate3d(0, 22px, 0); }
+[data-anim="tally"] .cart-page__head.reveal.is-visible { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The site-wide freeze at the foot of style.css releases `.reveal`
+     at specificity (0,1,0); every rule above is (0,2,0) or higher and
+     would out-rank it, so this variant must release its own elements.
+     The freeze also only zeroes transition-DURATION — a stale
+     transition-delay would still stall content, hence the explicit 0s.
+     !important matches the house style of that same freeze block. */
+  [data-anim="tally"] .reveal,
+  [data-anim="tally"] .cart-page__head.reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* checkout.html  ->  data-anim="converge"
+   Checkout is the last fork in the flow, so the two columns lean in toward the gutter between them and settle — form and summary converging on the Place Order button — while the fields inside cascade downward in the exact order the customer will fill them. */
+/* ── checkout.html · data-anim="converge" ──────────────────────────
+   Two-tier: the panels lean inward and settle; their contents
+   cascade. Transform/opacity only. */
+
+[data-anim="converge"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity   .38s var(--ease),
+    transform .46s cubic-bezier(.22, .61, .36, 1);
+  transition-delay: calc(min(var(--i, 0), 9) * 45ms);
+}
+
+[data-anim="converge"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Tier one — the two columns lean toward the 32px gutter between them.
+   Left column starts 16px to the RIGHT of where it lands, right column
+   16px to the LEFT: both start strictly INSIDE their own final box, so
+   neither can ever reach a viewport edge. */
+[data-anim="converge"] .form-card.reveal  { transform: translate3d( 16px, 14px, 0); }
+[data-anim="converge"] .co-summary.reveal { transform: translate3d(-16px, 14px, 0); }
+
+[data-anim="converge"] .form-card.reveal.is-visible,
+[data-anim="converge"] .co-summary.reveal.is-visible { transform: none; }
+
+@media (max-width: 992px) {
+  /* .checkout-layout collapses to one column here — there is no gutter
+     left to converge on, and a sideways nudge next to an 18–24px
+     .container gutter is exactly where a scrollbar would appear. */
+  [data-anim="converge"] .form-card.reveal,
+  [data-anim="converge"] .co-summary.reveal { transform: translate3d(0, 20px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The site-wide freeze releases `.reveal` at (0,1,0); the rules above
+     are (0,2,0)–(0,3,0) and would win on specificity regardless of
+     source order, so the variant releases its own elements. The freeze
+     zeroes transition-duration but not transition-delay. */
+  [data-anim="converge"] .reveal,
+  [data-anim="converge"] .form-card.reveal,
+  [data-anim="converge"] .co-summary.reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* contact.html  ->  data-anim="dispatch"
+   Contact is a hand-off, so the form panel sets itself down as one object, its rows type in line by line, and the two info cards slide in from the right like mail arriving on the desk. */
+/* ============================================================
+   contact.html — data-anim="dispatch"
+   The form panel settles in as one object, its rows arrive a line
+   at a time, and the info cards slide in from the right.
+   ============================================================ */
+[data-anim="dispatch"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition: opacity .50s var(--ease), transform .55s var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+[data-anim="dispatch"] .reveal.is-visible { opacity: 1; transform: none; }
+
+/* The panel arrives whole: a shade small, pinned to its top edge so it
+   grows down into the column rather than drifting sideways. */
+[data-anim="dispatch"] .form-card.reveal {
+  transform: translate3d(0, 26px, 0) scale(.975);
+  transform-origin: 50% 0;
+  transition: opacity .55s var(--ease),
+              transform .65s cubic-bezier(.2, .8, .25, 1);
+  transition-delay: 0ms;
+}
+[data-anim="dispatch"] .form-card.reveal.is-visible { transform: none; }
+
+/* Rows land after the card that carries them. Vertical only, and the whole
+   travel happens inside .form-card's own 30px padding. */
+[data-anim="dispatch"] .form-card .field.reveal {
+  transform: translate3d(0, 12px, 0);
+  transition-duration: .42s;
+  transition-delay: calc(220ms + var(--i, 0) * 55ms);
+}
+[data-anim="dispatch"] .form-card .field.reveal.is-visible { transform: none; }
+
+/* Info cards come in from the right. 12px is under the 18px gutter
+   .container holds at its narrowest breakpoint — see overflow note. */
+[data-anim="dispatch"] .contact-card.reveal {
+  transform: translate3d(12px, 22px, 0) scale(.99);
+  transition-duration: .55s;
+  transition-delay: calc(120ms + var(--i, 0) * 90ms);
+}
+[data-anim="dispatch"] .contact-card.reveal.is-visible { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="dispatch"] .reveal,
+  [data-anim="dispatch"] .reveal.is-visible,
+  [data-anim="dispatch"] .form-card.reveal,
+  [data-anim="dispatch"] .form-card.reveal.is-visible,
+  [data-anim="dispatch"] .form-card .field.reveal,
+  [data-anim="dispatch"] .form-card .field.reveal.is-visible,
+  [data-anim="dispatch"] .contact-card.reveal,
+  [data-anim="dispatch"] .contact-card.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0s;
+  }
+}
+
+/* help.html  ->  data-anim="dossier"
+   Help is three policy documents, so each .policy-section card unrolls downward from its top edge and its clauses settle in one line after another, the way you actually read a policy. */
+/* ============================================================
+   help.html — data-anim="dossier"
+   Each policy card unrolls downward from its top edge, then the
+   clauses inside settle in line by line.
+   ============================================================ */
+[data-anim="dossier"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity .50s var(--ease), transform .50s var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+[data-anim="dossier"] .reveal.is-visible { opacity: 1; transform: none; }
+
+/* The card unrolls: compressed on Y and pinned to its top edge, so it
+   grows downward into the column. scaleY touches nothing horizontal. */
+[data-anim="dossier"] .policy-section.reveal {
+  transform: translate3d(0, 18px, 0) scaleY(.94);
+  transform-origin: 50% 0;
+  transition: opacity .50s var(--ease),
+              transform .70s cubic-bezier(.2, .82, .26, 1);
+  transition-delay: 0ms;
+}
+[data-anim="dossier"] .policy-section.reveal.is-visible { transform: none; }
+
+/* Clauses land after the card that carries them. --i counts within each
+   .policy-section, so every list starts its count again at 0. */
+[data-anim="dossier"] .policy-section > p.reveal,
+[data-anim="dossier"] .policy-section li.reveal {
+  transform: translate3d(0, 10px, 0);
+  transition-duration: .42s;
+  transition-delay: calc(200ms + var(--i, 0) * 45ms);
+}
+[data-anim="dossier"] .policy-section > p.reveal.is-visible,
+[data-anim="dossier"] .policy-section li.reveal.is-visible { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="dossier"] .reveal,
+  [data-anim="dossier"] .reveal.is-visible,
+  [data-anim="dossier"] .policy-section.reveal,
+  [data-anim="dossier"] .policy-section.reveal.is-visible,
+  [data-anim="dossier"] .policy-section > p.reveal,
+  [data-anim="dossier"] .policy-section > p.reveal.is-visible,
+  [data-anim="dossier"] .policy-section li.reveal,
+  [data-anim="dossier"] .policy-section li.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0s;
+  }
+}
+
+/* index.html  ->  data-anim="focuspull"
+   The long marketing page is a sales pitch read top-to-bottom, so each block racks from soft-and-low into sharp-and-level like a camera pulling focus onto the next thing worth looking at. */
+/* ============================================================
+   index.html  ·  <body data-anim="focuspull">
+   Rack focus: blocks resolve from soft + low into sharp + level.
+   Animates opacity / transform / filter only.
+   Every rule is scoped to .reveal, which main.js adds at runtime —
+   a no-JS visitor is never shown a hidden page.
+   ============================================================ */
+
+[data-anim="focuspull"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0) scale(.985);
+  filter: blur(7px) saturate(.72);
+  transition:
+    opacity   .62s var(--ease),
+    transform .62s var(--ease),
+    filter    .62s var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* Layer promotion only while the block is still waiting; released on
+   arrival so a long page does not hold a compositor layer per section. */
+[data-anim="focuspull"] .reveal:not(.is-visible) {
+  will-change: opacity, transform, filter;
+}
+
+[data-anim="focuspull"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: blur(0px) saturate(1);
+  will-change: auto;
+}
+
+/* ---- Hero: longer throw, slower rack ----
+   Timing lives in a rule that applies in BOTH states, because the
+   transition that runs is read off the state being transitioned to. */
+[data-anim="focuspull"] .hero .reveal {
+  transition-duration: .78s;
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+[data-anim="focuspull"] .hero .reveal:not(.is-visible) {
+  transform: translate3d(0, 32px, 0) scale(.98);
+  filter: blur(9px) saturate(.7);
+}
+
+/* .hero__visual holds two chips on an infinite floatChip loop and an
+   orbiting ring pseudo-element. Blurring a live subtree re-rasterises it
+   every frame, so this one gets transform + opacity only. */
+[data-anim="focuspull"] .hero__visual.reveal:not(.is-visible) {
+  transform: translate3d(0, 30px, 0) scale(.965);
+  filter: none;
+}
+
+/* ---- Feature strip: small tiles, short throw ---- */
+[data-anim="focuspull"] .feature.reveal {
+  transition-duration: .5s;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+[data-anim="focuspull"] .feature.reveal:not(.is-visible) {
+  transform: translate3d(0, 14px, 0) scale(1);
+  filter: blur(5px) saturate(.8);
+}
+
+/* ---- Featured cards: crisper and quicker than the prose ---- */
+[data-anim="focuspull"] .product-grid .card.reveal {
+  transition-duration: .55s;
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+[data-anim="focuspull"] .product-grid .card.reveal:not(.is-visible) {
+  transform: translate3d(0, 22px, 0) scale(.975);
+  filter: blur(6px) saturate(.85);
+}
+
+/* ---- Reduced motion: no movement, no defocus, no queue ----
+   !important because the per-group rules above outrank a plain
+   selector list, and this block must beat all of them. */
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="focuspull"] .reveal,
+  [data-anim="focuspull"] .reveal:not(.is-visible),
+  [data-anim="focuspull"] .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+    will-change: auto !important;
+  }
+}
+
+/* orders.html  ->  data-anim="ledger"
+   An order history is a running account, so each entry drops and squares up like a line printing into a ledger — deliberate, quiet, and never in the way of the numbers people came to read. */
+/* ============================================================
+   orders.html — <body data-anim="ledger">
+   Entries settle into place like lines printing into a ledger.
+   Transform + opacity only. Rotation is scoped to card-level
+   elements and never touches the full-bleed .page-hero.
+   ============================================================ */
+
+[data-anim="ledger"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity   .40s cubic-bezier(.22, .61, .36, 1),
+    transform .48s cubic-bezier(.22, .61, .36, 1);
+  /* min() caps the tail in CSS: long order histories can't crawl in. */
+  transition-delay: calc(min(var(--i, 0), 5) * 45ms);
+  will-change: opacity, transform;
+}
+
+[data-anim="ledger"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* The cards are the ledger lines: they drop and square up.
+   .order-card sits inside .container (24px gutter, 18px ≤560px) and is
+   itself overflow:hidden, so the ~1px bulge from .35deg of rotation
+   lands in the gutter and never reaches the viewport edge. */
+[data-anim="ledger"] .order-card.reveal {
+  transform: translate3d(0, 16px, 0) rotate(-.35deg);
+  transform-origin: 14% 0;
+}
+[data-anim="ledger"] .order-card.reveal.is-visible {
+  transform: none;
+}
+
+/* Hero lines lead in a fixed order, ahead of any list stagger. */
+[data-anim="ledger"] .page-hero__eyebrow.reveal { transition-delay: 0ms; }
+[data-anim="ledger"] .page-hero__title.reveal   { transition-delay: 55ms; }
+[data-anim="ledger"] .page-hero__sub.reveal     { transition-delay: 105ms; }
+[data-anim="ledger"] .acct-tabs.reveal          { transition-delay: 0ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="ledger"] .reveal,
+  [data-anim="ledger"] .order-card.reveal,
+  [data-anim="ledger"] .page-hero__eyebrow.reveal,
+  [data-anim="ledger"] .page-hero__title.reveal,
+  [data-anim="ledger"] .page-hero__sub.reveal,
+  [data-anim="ledger"] .acct-tabs.reveal {
+    transform: none;          /* no drop, no rotation, no movement at all */
+    transition: opacity .2s linear;
+    transition-delay: 0ms;
+    will-change: auto;
+  }
+  [data-anim="ledger"] .reveal.is-visible,
+  [data-anim="ledger"] .order-card.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* product.html  ->  data-anim="unbox"
+   A detail page is one item being presented to you, so the product shot lifts and brightens as if taken out of the box, then the spec lines unfold beside it one at a time. */
+/* ============================================================
+   product.html  ·  <body data-anim="unbox">
+   Unbox: the shot is lifted out and brightens, then the detail
+   lines unfold beside it, then the related row comes up as a set.
+   ============================================================ */
+
+[data-anim="unbox"] .reveal {
+  opacity: 0;
+  transform: translate3d(-14px, 10px, 0);
+  filter: none;
+  transition:
+    opacity   .5s  var(--ease),
+    transform .55s cubic-bezier(.2, .8, .25, 1);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+
+[data-anim="unbox"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ---- The product shot: lifted out, not slid in ---- */
+[data-anim="unbox"] .pdp__media.reveal {
+  transition:
+    opacity   .6s var(--ease),
+    transform .7s cubic-bezier(.2, .8, .25, 1),
+    filter    .7s var(--ease);
+  transition-delay: 0ms;
+}
+[data-anim="unbox"] .pdp__media.reveal:not(.is-visible) {
+  transform: translate3d(0, 24px, 0) scale(.94);
+  filter: brightness(.82) saturate(.78);
+}
+[data-anim="unbox"] .pdp__media.reveal.is-visible {
+  transform: none;
+  filter: brightness(1) saturate(1);
+}
+
+/* ---- Buy controls land last and land flat: no sideways drift on
+        the thing the visitor is about to click ---- */
+[data-anim="unbox"] .pdp__buy.reveal:not(.is-visible),
+[data-anim="unbox"] .pdp__meta.reveal:not(.is-visible) {
+  transform: translate3d(0, 14px, 0);
+}
+
+/* ---- Related row: a set, presented together ---- */
+[data-anim="unbox"] .pdp__related .card.reveal {
+  transition-duration: .55s;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+[data-anim="unbox"] .pdp__related .card.reveal:not(.is-visible) {
+  transform: translate3d(0, 26px, 0) scale(.97);
+}
+[data-anim="unbox"] .pdp__related .section__head.reveal:not(.is-visible) {
+  transform: translate3d(0, 18px, 0);
+}
+
+/* ---- Reduced motion: no lift, no drift, no dimming ---- */
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="unbox"] .reveal,
+  [data-anim="unbox"] .reveal:not(.is-visible),
+  [data-anim="unbox"] .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* products.html  ->  data-anim="shelfset"
+   The catalog is 50+ items being put out for sale, so each card tips up from a laid-back angle and settles onto its baseline — goods being set down on a shelf, row by row. */
+/* ============================================================
+   products.html  ·  <body data-anim="shelfset">
+   Shelf set: each card tips up from a back-lean onto its baseline.
+   transform-origin is the bottom edge, so the motion pivots on the
+   shelf line rather than the card's middle.
+   ============================================================ */
+
+[data-anim="shelfset"] .reveal {
+  opacity: 0;
+  transform-origin: 50% 100%;
+  transform: perspective(1100px) translate3d(0, 30px, 0) rotateX(9deg) scale(.965);
+  transition:
+    opacity   .5s  var(--ease),
+    transform .58s cubic-bezier(.22, .85, .3, 1);
+  transition-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Same function list in both states so the browser interpolates the
+   transform component-wise instead of falling back to matrix lerp. */
+[data-anim="shelfset"] .reveal.is-visible {
+  opacity: 1;
+  transform: perspective(1100px) translate3d(0, 0, 0) rotateX(0deg) scale(1);
+}
+
+/* ---- Page head + filter row: full-width, so barely any tilt ---- */
+[data-anim="shelfset"] .catalog__head.reveal,
+[data-anim="shelfset"] .filter-chips.reveal {
+  transition-duration: .5s;
+  transition-delay: 0ms;
+}
+[data-anim="shelfset"] .catalog__head.reveal:not(.is-visible),
+[data-anim="shelfset"] .filter-chips.reveal:not(.is-visible) {
+  transform: perspective(1100px) translate3d(0, 16px, 0) rotateX(4deg) scale(1);
+}
+
+/* ---- Cards: the shelf itself ---- */
+[data-anim="shelfset"] .product-grid .card.reveal {
+  transition-duration: .58s;
+}
+[data-anim="shelfset"] .product-grid .card.reveal:not(.is-visible) {
+  transform: perspective(1100px) translate3d(0, 30px, 0) rotateX(10deg) scale(.96);
+}
+
+/* ---- Reduced motion: flat, instant, no tilt ---- */
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="shelfset"] .reveal,
+  [data-anim="shelfset"] .reveal:not(.is-visible),
+  [data-anim="shelfset"] .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* success.html  ->  data-anim="bloom"
+   A confirmation page has one job and one beat, so the tick springs open with a single soft overshoot and the message blooms out under it line by line — celebratory enough to feel earned, over in well under a second. */
+/* ── success.html · data-anim="bloom" ──────────────────────────────
+   One panel, one spring on the tick, then the copy blooms out.
+   Transform/opacity only. Do not tag #orderRecap — it is [hidden]
+   until the order fetch resolves. */
+
+[data-anim="bloom"] .reveal {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity   .42s var(--ease),
+    transform .46s cubic-bezier(.22, .61, .36, 1);
+  transition-delay: calc(min(var(--i, 0), 6) * 70ms);
+}
+
+[data-anim="bloom"] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* The panel is the stage: it lands first and fades fast, so the nested
+   children are not multiplying against a still-transparent parent. */
+[data-anim="bloom"] .co-success.reveal {
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity   .30s var(--ease),
+    transform .44s cubic-bezier(.22, .61, .36, 1);
+}
+[data-anim="bloom"] .co-success.reveal.is-visible { transform: none; }
+
+/* The one celebratory beat: the tick springs open with a single soft
+   overshoot (peaks near 1.07 and settles). Uniform scale about the
+   element centre — no rotation, no wobble, no repeat. */
+[data-anim="bloom"] .co-success .success-icon.reveal {
+  transform: scale(.55);
+  transition:
+    opacity   .28s var(--ease),
+    transform .62s cubic-bezier(.34, 1.56, .64, 1);
+  transition-delay: calc(min(var(--i, 0), 6) * 70ms);
+}
+[data-anim="bloom"] .co-success .success-icon.reveal.is-visible { transform: none; }
+
+/* .btn owns a transform on :hover and a .18s transition of its own.
+   A blanket shorthand would stretch that hover lift to half a second,
+   so the CTA reveals on opacity alone and every other property keeps
+   the button's native timing with no stagger delay attached. */
+[data-anim="bloom"] .co-success .btn.reveal {
+  transform: none;
+  transition:
+    opacity          .45s var(--ease),
+    transform        .18s var(--ease),
+    background-color .18s var(--ease),
+    box-shadow       .18s var(--ease),
+    border-color     .18s var(--ease),
+    color            .18s var(--ease);
+  transition-delay: calc(min(var(--i, 0), 6) * 70ms), 0s, 0s, 0s, 0s, 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No spring, no overshoot, no rise. The site-wide freeze releases
+     `.reveal` at (0,1,0) and would lose to every rule above on
+     specificity, so this variant releases its own elements; it also
+     zeroes duration but not delay, hence the explicit 0s. */
+  [data-anim="bloom"] .reveal,
+  [data-anim="bloom"] .co-success.reveal,
+  [data-anim="bloom"] .co-success .success-icon.reveal,
+  [data-anim="bloom"] .co-success .btn.reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0s !important;
+  }
+}
 
 /* ---------- 12. Responsive ---------- */
 @media (max-width: 992px) {
@@ -2592,3 +4608,134 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- 13. Color Swatches Component ---------- */
+.color-swatch-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Card Swatches (compact, ~20px) */
+.card__swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.swatch-btn {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  background-color: var(--swatch-hex, #ccc);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.swatch-btn:hover:not([aria-disabled="true"]) {
+  transform: scale(1.18);
+  border-color: var(--indigo-500);
+}
+
+.swatch-btn[aria-pressed="true"] {
+  border-color: var(--indigo-600);
+  box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--indigo-600);
+}
+
+.swatch-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.swatch-btn[aria-disabled="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  right: -2px;
+  height: 1.5px;
+  background-color: #ef4444;
+  transform: rotate(-45deg);
+}
+
+.swatch-btn__check {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+.swatch-btn[aria-pressed="true"] .swatch-btn__check {
+  display: block;
+}
+
+.swatch-btn--light {
+  border-color: rgba(15, 23, 42, 0.25);
+}
+
+.swatch-btn--light .swatch-btn__check {
+  background-color: #0f172a;
+}
+
+/* PDP Swatch Section */
+.pdp__color-section {
+  margin: 18px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp__color-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdp__color-val {
+  font-weight: 700;
+  color: var(--indigo-600);
+}
+
+.pdp__swatches {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pdp__swatches .swatch-btn {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+}
+
+.pdp__swatches .swatch-btn[aria-pressed="true"] {
+  box-shadow: 0 0 0 2.5px var(--bg-surface), 0 0 0 5px var(--indigo-600);
+}
+
+.pdp__swatches .swatch-btn__check {
+  width: 8px;
+  height: 8px;
+}
+
+.swatch-btn:focus-visible {
+  outline: 3px solid var(--indigo-500) !important;
+  outline-offset: 3px !important;
+}
+

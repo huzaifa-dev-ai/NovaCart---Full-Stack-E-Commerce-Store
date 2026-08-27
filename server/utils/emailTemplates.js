@@ -64,33 +64,47 @@ function button(href, label) {
 
 /* ---------- Password reset ---------- */
 
-function resetEmail({ name, resetUrl }) {
+/**
+ * The one-time reset code.
+ *
+ * Deliberately contains NO link. The whole point of moving off a magic link
+ * is that nothing in this mail is clickable, so a forwarded or intercepted
+ * message cannot be acted on by opening it — the code still has to be typed
+ * back into a session that already knows which address asked for it.
+ */
+function resetOtpEmail({ name, code, minutes, attempts }) {
   const first = esc(String(name || "").trim().split(/\s+/)[0] || "there");
-  // Escaped before entering an href — a URL is still untrusted text here.
-  const safeUrl = esc(resetUrl);
+  const digits = esc(String(code || ""));
+  const life = Number(minutes) || 10;
+  const tries = Number(attempts) || 5;
 
   return {
-    subject: "Reset your NovaCart password",
+    subject: `${String(code || "")} is your NovaCart password reset code`,
     text: [
       `Hi ${String(name || "").trim().split(/\s+/)[0] || "there"},`,
       "",
-      "Someone asked to reset the password for your NovaCart account.",
-      "If that was you, open this link within 30 minutes:",
+      "Your NovaCart password reset code is:",
       "",
-      `  ${resetUrl}`,
+      `    ${String(code || "")}`,
       "",
-      "If you didn't ask for this, you can safely ignore this email —",
-      "your password will stay exactly as it is."
+      `It expires in ${life} minutes and can be used once. After ${tries} wrong`,
+      "attempts it stops working and you will need to request a new one.",
+      "",
+      "If you did not ask to reset your password, you can ignore this email —",
+      "nothing has changed on your account."
     ].join("\n"),
-    html: shell("Reset your password", `
+    html: shell("Your reset code", `
       <p ${P}>Hi ${first},</p>
-      <p ${P}>Someone asked to reset the password for your NovaCart account.
-         If that was you, click the button below within <strong>30 minutes</strong>.</p>
-      ${button(safeUrl, "Choose a new password")}
-      <p ${P}>Or paste this link into your browser:<br/>
-        <a href="${safeUrl}" style="color:#4F46E5;word-break:break-all;">${safeUrl}</a></p>
-      <p ${P}>If you didn't ask for this, ignore this email — your password
-         will stay exactly as it is.</p>
+      <p ${P}>Enter this code on the page you started from:</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0;">
+        <tr><td style="background-color:#F1F5F9;border:1px solid #CBD5E1;border-radius:12px;padding:18px 30px;">
+          <span style="font-family:'Courier New',Courier,monospace;font-size:34px;font-weight:bold;letter-spacing:9px;color:#1E293B;">${digits}</span>
+        </td></tr>
+      </table>
+      <p ${P}>It expires in <strong>${life} minutes</strong> and can be used once.
+         After ${tries} wrong attempts it stops working and you will need a new one.</p>
+      <p ${P}>If you did not ask to reset your password you can ignore this
+         email &mdash; nothing on your account has changed.</p>
     `)
   };
 }
@@ -122,7 +136,85 @@ function welcomeEmail({ name, siteUrl }) {
   };
 }
 
-/* ---------- Contact form -> store inbox ---------- */
+/**
+ * Sent when a Google account is attached to an existing NovaCart account.
+ *
+ * This is a security notice, not a nicety. Linking is what turns two separate
+ * identities into one login, so the address that owns the account gets told
+ * out-of-band — if it wasn't them, this mail is how they find out.
+ *
+ * When the account had a password, that password is disabled at link time
+ * (NovaCart cannot prove whoever set it owned the address), and the mail has
+ * to say so plainly. Telling someone "you can now use either method" when one
+ * of them has just stopped working would send them in circles.
+ */
+function googleLinkedEmail({ name, email, siteUrl, passwordDisabled }) {
+  const first = esc(String(name || "").trim().split(/\s+/)[0] || "there");
+  const url = esc(siteUrl || "http://localhost:5000");
+  const address = esc(email || "");
+  const plainFirst = String(name || "").trim().split(/\s+/)[0] || "there";
+
+  const textBody = passwordDisabled
+    ? [
+        `Hi ${plainFirst},`,
+        "",
+        `Google Sign-In is now set up for your NovaCart account (${email || ""}).`,
+        "",
+        "The password on this account has been switched off. We do this whenever",
+        "a Google account is linked to an address we had not already verified, so",
+        "that only the person who owns the mailbox can get in.",
+        "",
+        "Sign in with Google from now on. If you would rather also have a",
+        "password, set a fresh one here:",
+        `${url}/forgot-password.html`,
+        "",
+        "If this wasn't you, set a new password immediately — that is what locks",
+        "the account back down."
+      ]
+    : [
+        `Hi ${plainFirst},`,
+        "",
+        `Google Sign-In has been enabled for your NovaCart account (${email || ""}).`,
+        "You can now sign in with either your password or your Google account.",
+        "",
+        "If this wasn't you, change your password straight away:",
+        `${url}/forgot-password.html`
+      ];
+
+  const htmlBody = passwordDisabled
+    ? `
+      <p ${P}>Hi ${first},</p>
+      <p ${P}>Google Sign-In is now set up for your NovaCart account
+         (<strong>${address}</strong>).</p>
+      <p ${P}><strong>The password on this account has been switched off.</strong>
+         We do that whenever a Google account is linked to an address we had not
+         already verified, so that only the person who owns the mailbox can get
+         in. Nothing else about your account has changed &mdash; your orders and
+         addresses are exactly where you left them.</p>
+      <p ${P}>Use the <em>Continue with Google</em> button from now on. If you
+         would also like a password, set a fresh one:</p>
+      ${button(`${url}/forgot-password.html`, "Set a new password")}
+      <p ${P}>If this wasn&rsquo;t you, set a new password immediately &mdash;
+         that signs out every device currently holding a session.</p>
+    `
+    : `
+      <p ${P}>Hi ${first},</p>
+      <p ${P}>Google Sign-In has just been enabled for your NovaCart account
+         (<strong>${address}</strong>). You can now sign in with either your
+         password or your Google account &mdash; whichever you prefer.</p>
+      <p ${P}><strong>If this wasn&rsquo;t you</strong>, change your password
+         immediately. That signs out every device currently holding a session.</p>
+      ${button(`${url}/forgot-password.html`, "Secure my account")}
+    `;
+
+  return {
+    subject: passwordDisabled
+      ? "Your NovaCart sign-in has changed"
+      : "Google Sign-In was linked to your NovaCart account",
+    text: textBody.join("\n"),
+    html: shell(passwordDisabled ? "Sign in with Google from now on" : "Google Sign-In linked", htmlBody)
+  };
+}
 
 function contactEmail({ name, email, message }) {
   return {
@@ -165,6 +257,11 @@ function orderEmail({ order }) {
     .map((l) => `  ${l.name} x${l.qty}  ${money(l.unitPrice * l.qty)}`)
     .join("\n");
 
+  const paymentMethodLabel = {
+    cod: "Cash on Delivery",
+    card: "Credit / Debit Card (Visa, MasterCard)"
+  }[order.paymentMethod] || "Cash on Delivery";
+
   return {
     subject: `Order ${order.number} confirmed — NovaCart`,
     text: [
@@ -172,7 +269,9 @@ function orderEmail({ order }) {
       "",
       `Thanks for your order. We've received it and it's being prepared.`,
       "",
-      `Order number : ${order.number}`,
+      `Order number   : ${order.number}`,
+      `Payment Method : ${paymentMethodLabel}`,
+      `Payment Status : ${order.paymentStatus || "unpaid"}`,
       "",
       "Items:",
       lines,
@@ -187,6 +286,7 @@ function orderEmail({ order }) {
       <p ${P}>Hi ${first},</p>
       <p ${P}>Thanks for your order — we've received it and it's being prepared.
          We'll email you again as soon as it ships.</p>
+      <p ${P}><strong>Payment Method:</strong> ${esc(paymentMethodLabel)} (${esc(order.paymentStatus || "unpaid")})</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
              style="margin:20px 0;border-top:1px solid #E2E8F0;border-bottom:1px solid #E2E8F0;">
         ${itemRows(order.items)}
@@ -276,8 +376,10 @@ function returnStatusEmail({ request }) {
 }
 
 module.exports = {
-  resetEmail,
+  resetOtpEmail,
   welcomeEmail,
+  welcomeEmail,
+  googleLinkedEmail,
   contactEmail,
   orderEmail,
   orderStatusEmail,

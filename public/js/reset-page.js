@@ -60,13 +60,20 @@
       alertBox.classList.add("is-visible");
     }
 
-    var token = new URLSearchParams(window.location.search).get("token") || "";
+    // The token now arrives in sessionStorage, handed over by the code step
+    // on forgot-password.html. It authorises a password change, so keeping it
+    // out of the URL keeps it out of history, bookmarks and the Referer
+    // header. ?token= is still honoured for any link already in the wild.
+    var token = "";
+    try { token = sessionStorage.getItem("novacart.reset.token") || ""; }
+    catch (err) { /* private mode */ }
+    if (!token) { token = new URLSearchParams(window.location.search).get("token") || ""; }
 
     // No token at all — the page was opened directly rather than followed
-    // from a reset link.
+    // by verifying a one-time code.
     if (!token) {
       form.hidden = true;
-      showAlert("This page needs a reset link. Request one from the sign-in page.");
+      showAlert("Start from “Forgot password?” on the sign-in page — we will send you a code.");
       return;
     }
 
@@ -111,6 +118,10 @@
 
       button.disabled = true;
       button.textContent = "Updating…";
+
+      // Spent either way: on success it is consumed server-side, and on
+      // failure it is no use to anyone.
+      try { sessionStorage.removeItem("novacart.reset.token"); } catch (err) {}
 
       Auth.resetPassword(token, password.value)
         .then(function () {

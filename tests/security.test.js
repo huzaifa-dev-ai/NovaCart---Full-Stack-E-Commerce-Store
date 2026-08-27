@@ -1,5 +1,7 @@
 /* Verification for the 8 confirmed mail-review findings. */
 
+const { ORIGIN } = require("./origin");
+
 process.chdir("d:\\CodeAlpha Internship\\NovaCart");
 require("dotenv").config({ quiet: true, path: require("path").join(__dirname, "..", ".env") });
 
@@ -83,7 +85,7 @@ const env = require("../server/utils/env");
   process.env.SMTP_HOST = realSmtp;
 
   console.log("\n#1  LIVE: reset token must never appear in the HTTP response");
-  const r = await fetch("http://localhost:5000/api/auth/forgot-password", {
+  const r = await fetch(ORIGIN + "/api/auth/forgot-password", {
     method: "POST",
     headers: { "Content-Type": "application/json", Host: "attacker.com" },
     body: JSON.stringify({ email: "definitely-not-registered@example.com" })
@@ -96,7 +98,7 @@ const env = require("../server/utils/env");
   console.log("\n#3  TIMING: registered vs unknown address");
   const time = async (email) => {
     const t = Date.now();
-    await fetch("http://localhost:5000/api/auth/forgot-password", {
+    await fetch(ORIGIN + "/api/auth/forgot-password", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
     });

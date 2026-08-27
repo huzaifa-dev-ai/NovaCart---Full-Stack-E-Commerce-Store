@@ -157,6 +157,20 @@
 
   var STEPS = ["pending", "processing", "shipped", "delivered"];
 
+  var PM_LABELS = { cod: "COD", card: "Card" };
+  var PS_COLORS = {
+    unpaid:   { bg: "#F1F5F9", fg: "#475569" },
+    pending:  { bg: "#FEF3C7", fg: "#D97706" },
+    paid:     { bg: "#ECFDF5", fg: "#059669" },
+    failed:   { bg: "#FEF2F2", fg: "#DC2626" },
+    refunded: { bg: "#EDE9FE", fg: "#7C3AED" }
+  };
+  function payBadge(method, status) {
+    var label = (PM_LABELS[method] || "COD") + " \u00b7 " + (status || "unpaid");
+    var c = PS_COLORS[status] || PS_COLORS.unpaid;
+    return '<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:.75rem;font-weight:700;background:' + c.bg + ';color:' + c.fg + ';">' + esc(label) + '</span>';
+  }
+
   function progressHtml(order) {
     if (order.status === "cancelled") {
       return '<div class="return-note">This order was cancelled' +
@@ -200,7 +214,7 @@
           '<div class="order-card__meta">Placed ' + date(order.placedAt) + " · " + units +
             (units === 1 ? " item" : " items") + "</div>" +
         "</div>" +
-        '<div class="order-card__right">' + pill(order.status) +
+        '<div class="order-card__right">' + pill(order.status) + ' ' + payBadge(order.paymentMethod, order.paymentStatus) +
           '<span class="order-card__total">' + money(order.total) + "</span></div>" +
       "</div>" +
       '<div class="order-card__body">' +
@@ -262,6 +276,7 @@
         progressHtml(order) +
         '<dl class="detail-rows">' +
           '<div class="detail-row"><dt>Status</dt><dd>' + pill(order.status) + "</dd></div>" +
+          '<div class="detail-row"><dt>Payment</dt><dd>' + payBadge(order.paymentMethod, order.paymentStatus) + "</dd></div>" +
           '<div class="detail-row"><dt>Placed</dt><dd>' + dateTime(order.placedAt) + "</dd></div>" +
           '<div class="detail-row"><dt>Deliver to</dt><dd>' + esc(order.customer.name) + "<br/>" +
             esc(order.customer.address) + "<br/>" + esc(order.customer.city) + " " + esc(order.customer.postal) +

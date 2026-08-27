@@ -11,6 +11,10 @@
 
 require("dotenv").config();
 
+const fs = require("fs");
+const http = require("http");
+const https = require("https");
+
 const app = require("./app");
 const { connectDB, disconnectDB } = require("./config/db");
 const { verifyMailer } = require("./utils/mailer");
@@ -44,11 +48,34 @@ async function start() {
     console.error("⚠️   Mail: verification failed —", error.message);
   });
 
-  const server = app.listen(PORT, () => {
+  // ---- HTTPS in development ----------------------------------------
+  // Browsers refuse card autofill on an insecure origin, and cookies marked
+  // Secure are dropped, so payment work is easier to test over TLS. Set
+  // SSL_KEY_PATH / SSL_CERT_PATH (or drop certs into ./certs) to enable it.
+  // Production terminates TLS at the host or proxy, so this stays off there.
+  function tlsOptions() {
+    const keyPath = process.env.SSL_KEY_PATH || "certs/localhost-key.pem";
+    const certPath = process.env.SSL_CERT_PATH || "certs/localhost-cert.pem";
+    if (process.env.USE_HTTPS !== "true") { return null; }
+    try {
+      return { key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath) };
+    } catch (error) {
+      console.warn(`\u26a0\ufe0f   USE_HTTPS=true but the certificate could not be read (${error.code}).`);
+      console.warn("     Falling back to HTTP. Generate one with:");
+      console.warn("       npm run cert\n");
+      return null;
+    }
+  }
+
+  const tls = tlsOptions();
+  const scheme = tls ? "https" : "http";
+  const server = tls ? https.createServer(tls, app) : http.createServer(app);
+
+  server.listen(PORT, () => {
     console.log("");
     console.log("🚀  NovaCart server running");
-    console.log(`    Site   →  http://localhost:${PORT}`);
-    console.log(`    API    →  http://localhost:${PORT}/api/health`);
+    console.log(`    Site   →  ${scheme}://localhost:${PORT}`);
+    console.log(`    API    →  ${scheme}://localhost:${PORT}/api/health`);
     console.log(`    Env    →  ${process.env.NODE_ENV || "development"}`);
     console.log("");
   });

@@ -17,9 +17,22 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
-// Rate limiters key on req.ip. Behind a proxy (Render, Railway, nginx)
-// that would otherwise be the proxy's own address for every visitor.
-app.set("trust proxy", 1);
+// Rate limiters key on req.ip. Behind a proxy (Render, Railway, nginx) that
+// would otherwise be the proxy's own address for every visitor, so the hop
+// count has to be declared.
+//
+// But trusting a proxy that ISN'T there is far worse than not trusting one:
+// req.ip then comes from the X-Forwarded-For header, which the caller writes.
+// Rotating it defeats every limiter in this app — login brute-force,
+// registration, password reset, the contact form. Measured before this was
+// made conditional: 10 of 14 plain attempts blocked, 0 of 25 blocked when
+// spoofing the header.
+//
+// So it stays OFF unless the deployment explicitly declares a proxy.
+if (process.env.TRUST_PROXY) {
+  const hops = process.env.TRUST_PROXY;
+  app.set("trust proxy", /^\d+$/.test(hops) ? Number(hops) : hops);
+}
 
 // Don't advertise the framework.
 app.disable("x-powered-by");
@@ -35,11 +48,14 @@ app.use(
         // files from gstatic.
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:"],
+        // Google profile photos are served from googleusercontent.com. Scoped
+        // to that host rather than opening img-src to the web.
+        imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
         // 'unsafe-inline' is needed for the inline onerror image fallbacks in
         // the markup. Removing those attributes would let this be tightened.
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+        connectSrc: ["'self'", "https://api.stripe.com"],
+        frameSrc: ["'self'", "https://js.stripe.com"],
         objectSrc: ["'none'"],
         frameAncestors: ["'self'"],
         baseUri: ["'self'"],
@@ -64,9 +80,15 @@ app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
 
 // One-line request log — enough to see what the frontend is calling.
+//
+// Auth routes log the PATH ONLY. Their query strings carry live credentials:
+// the Google callback arrives as ?code=<one-time auth code>&state=<CSRF
+// token>, and writing those to a log file puts working secrets somewhere
+// they will outlive their own expiry.
 app.use((req, _res, next) => {
   if (req.path.startsWith("/api")) {
-    console.log(`${req.method} ${req.originalUrl}`);
+    const sensitive = req.path.startsWith("/api/auth");
+    console.log(`${req.method} ${sensitive ? req.path : req.originalUrl}`);
   }
   next();
 });
@@ -93,6 +115,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/contact", require("./routes/contact"));
 app.use("/api/products", require("./routes/products"));
 app.use("/api/orders", require("./routes/orders"));
+app.use("/api/payments", require("./routes/payments"));
 app.use("/api/returns", require("./routes/returns"));
 app.use("/api/admin", require("./routes/admin"));
 

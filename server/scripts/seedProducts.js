@@ -69,6 +69,8 @@ async function seedProducts() {
       price: item.price,
       oldPrice: item.oldPrice ?? null,
       image: item.image,
+      defaultColorId: item.defaultColorId || null,
+      colors: item.colors || [],
       shortDescription: item.shortDescription,
       description: item.description || "",
       features: item.features || [],
