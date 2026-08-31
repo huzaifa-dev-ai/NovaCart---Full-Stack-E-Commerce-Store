@@ -299,6 +299,25 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   transition: background-color .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
 }
 .admin-link svg { width: 18px; height: 18px; flex: none; }
+
+/* A first name has no length limit; the header row does. Cap it with an
+   ellipsis so an unusual name shortens instead of shoving the row into a
+   horizontal scrollbar — measured: a 16-character first name overflowed by
+   21px at 901px once this shortcut sat beside it. The dropdown underneath
+   still shows the name in full, so nothing is actually lost.
+   Scoped to the signed-in chip so the "Sign in" link is untouched. */
+.account__btn .account__label {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Just above the band where the shortcut hides, the row is at its tightest
+   with everything still on it — so the name gives up more of its width here
+   than it does on a wide screen. */
+@media (max-width: 1000px) {
+  .account__btn .account__label { max-width: 8ch; }
+}
 .admin-link:hover {
   background: var(--indigo-600);
   border-color: var(--indigo-600);
