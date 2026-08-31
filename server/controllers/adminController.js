@@ -278,6 +278,76 @@ function applyStockToVariants(product, total) {
   product.stock = shares.reduce((sum, n) => sum + n, 0);
 }
 
+/**
+ * Set stock per colour, from `variantStock: { "<colorId>": <count>, ... }`.
+ *
+ * Deliberately narrow: this accepts a count against a colour id and nothing
+ * else. Taking a whole colours array from the client would open a route to
+ * rewriting labels, swatch hex and image paths through the stock form, which
+ * is a much wider door than the job needs.
+ *
+ * Colours left out of the payload keep the stock they had, so editing one
+ * colour cannot silently zero the others.
+ */
+function applyVariantStock(product, variantStock) {
+  const colors = product.colors || [];
+  const errors = [];
+
+  Object.keys(variantStock).forEach((colorId) => {
+    const colour = colors.find((c) => c.id === colorId);
+    if (!colour) {
+      errors.push({ field: `variantStock.${colorId}`,
+        message: `This product has no colour called "${colorId}".` });
+      return;
+    }
+    const raw = variantStock[colorId];
+    const count = Number(raw);
+    if (!Number.isInteger(count) || count < 0 || count > 100000) {
+      errors.push({ field: `variantStock.${colorId}`,
+        message: `Stock for ${colour.label} must be a whole number of 0 or more.` });
+      return;
+    }
+    colour.stockCount = count;
+    colour.inStock = count > 0;
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+
+  // The product total is never typed in when colours carry their own counts —
+  // it is whatever the parts add up to, so the two cannot drift.
+  product.stock = colors.reduce((sum, c) => sum + (Number(c.stockCount) || 0), 0);
+}
+
+/**
+ * A sale price only means anything below the original, so the model refuses
+ * oldPrice <= price. Its message names only "old price", which is baffling
+ * when what you just did was raise the price — you get told off about a field
+ * you never touched, with neither number in front of you.
+ *
+ * This says which two numbers collide and what to do about it, and puts the
+ * complaint on the field the admin actually edited so the form highlights
+ * something they were looking at. The sale is never silently cancelled for
+ * them; changing what a product costs stays a deliberate act.
+ */
+function assertSalePriceMakesSense(product, body) {
+  const original = product.oldPrice;
+  if (original === null || original === undefined) { return; }
+  if (Number(original) > Number(product.price)) { return; }
+
+  const money = (n) => "$" + Number(n).toFixed(2);
+  const editedOriginal = "oldPrice" in body;
+  const field = editedOriginal ? "oldPrice" : "price";
+  const message = editedOriginal
+    ? `The original price ${money(original)} has to be above the current price `
+      + `${money(product.price)}. Raise it, or clear it to end the sale.`
+    : `${money(product.price)} is not below the original price of ${money(original)}, `
+      + `so it would not be a sale. Lower it, or clear the original price first.`;
+
+  throw ApiError.validation("Please check the highlighted fields.", [{ field, message }]);
+}
+
 /* ---------- PATCH /api/admin/products/:id ---------- */
 
 async function updateProduct(req, res, next) {
@@ -308,9 +378,15 @@ async function updateProduct(req, res, next) {
     // Stock goes through the helper so it reaches the variant counts the
     // storefront reads and createOrder validates against, not only the
     // product-level total the form used to write on its own.
-    if ("stock" in req.body) {
+    // Per-colour counts are the more specific instruction, so they win when
+    // both arrive; the form only ever sends one or the other.
+    if (req.body.variantStock && typeof req.body.variantStock === "object") {
+      applyVariantStock(product, req.body.variantStock);
+    } else if ("stock" in req.body) {
       applyStockToVariants(product, req.body.stock);
     }
+
+    assertSalePriceMakesSense(product, req.body);
 
     await product.save();
     res.json({ success: true, product });

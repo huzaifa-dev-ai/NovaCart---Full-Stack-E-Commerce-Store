@@ -3295,6 +3295,48 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   vertical-align: middle;
 }
 
+/* Stock by colour, in the admin product drawer. One row per colour: its swatch,
+   its name, and its own count. The total underneath is calculated, never typed,
+   so it can never disagree with the boxes above it. */
+.vstock {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+.vstock__row {
+  display: grid;
+  grid-template-columns: 20px 1fr 92px;
+  align-items: center;
+  gap: 10px;
+}
+.vstock__swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 23, 42, .25);
+}
+.vstock__label { font-size: .88rem; font-weight: 600; margin: 0; }
+.vstock__input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  text-align: right;
+}
+.vstock__input:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
+.vstock__total {
+  margin: 4px 0 0;
+  padding-top: 9px;
+  border-top: 1px dashed var(--border);
+  font-size: .84rem;
+  color: var(--text-soft, #64748b);
+}
+.vstock__total strong { color: var(--slate-900, #0f172a); font-variant-numeric: tabular-nums; }
+
 .account__item--admin { color: var(--indigo-600); font-weight: 650; }
 .account__item--admin svg { color: var(--indigo-600); }
 .account__item--admin:hover { background: var(--indigo-50); color: var(--indigo-700); }

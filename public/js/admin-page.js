@@ -274,6 +274,58 @@
     });
   }
 
+  /**
+   * Stock, per colour where a product has them.
+   *
+   * A product with three colours has three stock levels, and the shop sells
+   * from those rather than from any single figure — so typing one number and
+   * having it split three ways is guesswork the shopkeeper should not have to
+   * do. Where colours exist they get a box each and the total is shown but not
+   * typed: it is the sum, and letting someone type a total that disagrees with
+   * its own parts is how the two drift apart.
+   *
+   * A product with one colour, or none, keeps the plain single field.
+   */
+  function stockFields(product) {
+    var colors = product.colors || [];
+    if (colors.length < 2) {
+      return field("Stock", "pStock", product.stock, "number", true);
+    }
+
+    var total = colors.reduce(function (sum, c) { return sum + (Number(c.stockCount) || 0); }, 0);
+
+    var rows = colors.map(function (c) {
+      return '<div class="vstock__row">' +
+        '<span class="vstock__swatch" style="background:' + esc(c.swatchHex || "#64748b") + '"' +
+          ' aria-hidden="true"></span>' +
+        '<label class="vstock__label" for="vstock-' + esc(c.id) + '">' + esc(c.label) + "</label>" +
+        '<input class="vstock__input" type="number" min="0" step="1" inputmode="numeric"' +
+          ' id="vstock-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' value="' + (Number(c.stockCount) || 0) + '" />' +
+      "</div>";
+    }).join("");
+
+    return '<div class="field field--wide">' +
+      '<label>Stock by colour</label>' +
+      '<div class="vstock">' + rows +
+        '<p class="vstock__total">Total in stock: <strong id="pStockTotal">' + total + "</strong></p>" +
+      "</div>" +
+      '<span class="field-error"></span></div>';
+  }
+
+  /** Keep the displayed total honest as the individual boxes are typed in. */
+  function wireStockTotal() {
+    var out = document.getElementById("pStockTotal");
+    if (!out) { return; }
+    var inputs = [].slice.call(document.querySelectorAll(".vstock__input"));
+    var recount = function () {
+      out.textContent = inputs.reduce(function (sum, el) {
+        var n = parseInt(el.value, 10);
+        return sum + (isNaN(n) || n < 0 ? 0 : n);
+      }, 0);
+    };
+    inputs.forEach(function (el) { el.addEventListener("input", recount); });
+  }
   function productForm(p) {
     var product = p || {};
     return '<form id="productForm" novalidate><div class="form-grid">' +
@@ -281,7 +333,7 @@
       field("Category", "pCategory", product.category, "text", true) +
       field("Price", "pPrice", product.price, "number", true) +
       field("Old price", "pOldPrice", product.oldPrice, "number") +
-      field("Stock", "pStock", product.stock, "number", true) +
+      stockFields(product) +
       selectField("Badge", "pBadge", product.badge, [["", "None"], ["Sale", "Sale"], ["New", "New"]]) +
       field("Image path", "pImage", product.image || "assets/images/products/", "text", true, true) +
       field("Short description", "pShort", product.shortDescription, "text", true, true) +
@@ -315,18 +367,29 @@
       }).join("") + "</select></div>";
   }
 
+  /** Whichever shape of stock control the form is currently showing. */
+  function readStock() {
+    var boxes = [].slice.call(document.querySelectorAll(".vstock__input"));
+    if (!boxes.length) {
+      return { stock: parseInt(document.getElementById("pStock").value, 10) };
+    }
+    var variantStock = {};
+    boxes.forEach(function (el) {
+      variantStock[el.getAttribute("data-color-id")] = parseInt(el.value, 10);
+    });
+    return { variantStock: variantStock };
+  }
   function readProductForm() {
     var features = document.getElementById("pFeatures").value
       .split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
 
     var oldPrice = document.getElementById("pOldPrice").value.trim();
 
-    return {
+    var payload = {
       name: document.getElementById("pName").value.trim(),
       category: document.getElementById("pCategory").value.trim(),
       price: Number(document.getElementById("pPrice").value),
       oldPrice: oldPrice === "" ? null : Number(oldPrice),
-      stock: parseInt(document.getElementById("pStock").value, 10),
       badge: document.getElementById("pBadge").value || null,
       image: document.getElementById("pImage").value.trim(),
       shortDescription: document.getElementById("pShort").value.trim(),
@@ -334,6 +397,15 @@
       features: features,
       featured: document.getElementById("pFeatured").checked
     };
+
+    // Stock is attached afterwards because its SHAPE depends on the product:
+    // per-colour boxes when it has colours, a single figure when it does not.
+    // The server treats variantStock as the more specific of the two.
+    var stock = readStock();
+    for (var key in stock) {
+      if (Object.prototype.hasOwnProperty.call(stock, key)) { payload[key] = stock[key]; }
+    }
+    return payload;
   }
 
   function paintFormErrors(error) {
@@ -361,6 +433,8 @@
       '<button type="button" class="btn btn--outline" data-close="1">Cancel</button>' +
       '<button type="button" class="btn btn--accent" id="saveProduct">' + (isNew ? "Create" : "Save changes") + "</button>"
     );
+
+    wireStockTotal();
 
     document.getElementById("saveProduct").addEventListener("click", function () {
       var button = this;
