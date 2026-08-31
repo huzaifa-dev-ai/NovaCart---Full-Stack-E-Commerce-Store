@@ -578,11 +578,63 @@
     return page + window.location.search;
   }
 
+  /**
+   * The dashboard shortcut only an administrator sees.
+   *
+   * A CONVENIENCE, never a gate. /api/admin/* is protected server-side by
+   * protect + requireRole("admin"), and admin.html fetches every figure it
+   * shows from there — so removing this element changes what is one click
+   * away, never what anyone is allowed to reach.
+   *
+   * Rendered from renderAccount() rather than written into the twelve HTML
+   * files that carry a header, which means it inherits every trigger that
+   * already keeps the account chip honest: the first paint from cache, the
+   * repaint when /api/auth/me answers, a sign-out in another tab, and a
+   * back/forward-cache restore.
+   */
+  function renderAdminLink(user) {
+    var actions = $(".header__actions");
+    if (!actions) { return; }
+
+    var existing = $("#adminLink");
+    var isAdmin = !!(user && user.role === "admin");
+
+    if (!isAdmin) {
+      // Covers signing out, and the moment the server contradicts a stale
+      // cached user that claimed to be an admin.
+      if (existing) { existing.remove(); }
+      return;
+    }
+    if (existing) { return; }   // already shown — leave it rather than thrash
+
+    var link = document.createElement("a");
+    link.id = "adminLink";
+    link.className = "admin-link";
+    link.href = "admin.html";
+    link.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>' +
+        '<rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>' +
+      "</svg>" +
+      '<span class="admin-link__label">Admin</span>';
+
+    // The label is hidden on narrow screens, so the accessible name has to come
+    // from somewhere that is never display:none.
+    link.setAttribute("aria-label", "Admin dashboard");
+    if ((window.location.pathname.split("/").pop() || "") === "admin.html") {
+      link.setAttribute("aria-current", "page");
+    }
+
+    actions.insertBefore(link, actions.firstChild);
+  }
+
   function renderAccount() {
     var slot = $("#accountSlot");
     if (!slot || !App.Auth) { return; }
 
     var user = App.Auth.getUser();
+    renderAdminLink(user);
 
     if (!user) {
       var next = currentPageForNext();

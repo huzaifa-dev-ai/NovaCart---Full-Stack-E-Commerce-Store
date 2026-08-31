@@ -280,6 +280,66 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 
 .header__actions { display: flex; align-items: center; gap: 10px; }
 
+/* Admin dashboard shortcut — only ever in the DOM for an administrator.
+   Same shape as the cart and account buttons so the row stays even, but
+   carrying the accent rather than the neutral white wash, because it leads
+   somewhere the ordinary shopper never goes. */
+.admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(79, 70, 229, .18);
+  border: 1px solid rgba(79, 70, 229, .5);
+  color: var(--white);
+  font-size: .9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+}
+.admin-link svg { width: 18px; height: 18px; flex: none; }
+.admin-link:hover {
+  background: var(--indigo-600);
+  border-color: var(--indigo-600);
+  transform: translateY(-1px);
+}
+.admin-link:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+/* Already on the dashboard: hold the filled state rather than inviting a click
+   that goes nowhere. */
+.admin-link[aria-current="page"] {
+  background: var(--indigo-600);
+  border-color: var(--indigo-600);
+}
+.admin-link[aria-current="page"]:hover { transform: none; }
+
+/* Shown only where the row measurably has room for it. The account menu carries
+   "Admin dashboard" at every width, so the shortcut is never the only way in
+   and dropping it costs a click, not access.
+
+   769-900px is the squeeze: the nav is still laid out inline and costs 254px,
+   leaving 50px at 769 — less than even an icon needs once its gap is counted.
+   A header that overflows into a horizontal scrollbar is worse than one
+   shortcut fewer. */
+@media (min-width: 769px) and (max-width: 900px) {
+  .admin-link { display: none; }
+}
+
+/* At 768 and below the nav collapses behind the hamburger and hands back its
+   254px, so the icon returns, trimmed to sit beside the account chip, the cart
+   and the toggle. */
+@media (max-width: 768px) {
+  .admin-link { padding: 9px 10px; gap: 0; }
+  .admin-link__label { display: none; }
+}
+
+/* Under 420px the row is full even without this: the header already spills a
+   few pixels on a 360px phone signed out. Adding to that would be making an
+   existing squeeze into a real one. */
+@media (max-width: 419px) {
+  .admin-link { display: none; }
+}
+
 /* Cart button */
 .cart-btn {
   position: relative;
