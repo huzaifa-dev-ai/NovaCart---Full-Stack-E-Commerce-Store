@@ -228,6 +228,56 @@ async function createProduct(req, res, next) {
   }
 }
 
+/**
+ * Push a product's stock level down into its colour variants.
+ *
+ * Stock is recorded in two places and read from both: `product.stock` is what
+ * the catalogue card and the cart's quantity limit use, while
+ * `colors[].stockCount` is what the product page shows, what disables a
+ * swatch, and — the one that really matters — what createOrder validates
+ * against before it will sell anything.
+ *
+ * The admin form only ever wrote `product.stock`, so restocking changed a
+ * number nothing sells from: the shop went on saying "Out of Stock" and the
+ * server went on refusing the order. In the other direction it was worse —
+ * zeroing the stock did not actually take the product off sale, because the
+ * variant counts it validates against were untouched.
+ *
+ * The existing balance between colours is kept where there is one to keep, so
+ * restocking a product that had 10 black and 2 white does not silently flatten
+ * it to 6 and 6. With nothing to go on, it splits evenly.
+ */
+function applyStockToVariants(product, total) {
+  const colors = product.colors || [];
+  const wanted = Math.max(0, Math.floor(Number(total) || 0));
+
+  if (!colors.length) {          // no variants: the single number is the truth
+    product.stock = wanted;
+    return;
+  }
+
+  const current = colors.map((c) => Math.max(0, Number(c.stockCount) || 0));
+  const currentTotal = current.reduce((sum, n) => sum + n, 0);
+
+  const shares = currentTotal > 0
+    ? current.map((n) => Math.floor((wanted * n) / currentTotal))
+    : colors.map(() => Math.floor(wanted / colors.length));
+
+  // Whatever the division left over goes to the earliest variants, so the
+  // parts always add back up to exactly what the admin typed.
+  let remainder = wanted - shares.reduce((sum, n) => sum + n, 0);
+  for (let i = 0; remainder > 0; i = (i + 1) % colors.length) {
+    shares[i] += 1;
+    remainder -= 1;
+  }
+
+  colors.forEach((colour, i) => {
+    colour.stockCount = shares[i];
+    colour.inStock = shares[i] > 0;
+  });
+  product.stock = shares.reduce((sum, n) => sum + n, 0);
+}
+
 /* ---------- PATCH /api/admin/products/:id ---------- */
 
 async function updateProduct(req, res, next) {
@@ -251,7 +301,15 @@ async function updateProduct(req, res, next) {
       if (field === "oldPrice" && (value === "" || value === undefined)) { value = null; }
       if (field === "badge" && value === "") { value = null; }
       if (field === "features" && !Array.isArray(value)) { continue; }
+      if (field === "stock") { continue; }   // handled below, across the variants
       product[field] = value;
+    }
+
+    // Stock goes through the helper so it reaches the variant counts the
+    // storefront reads and createOrder validates against, not only the
+    // product-level total the form used to write on its own.
+    if ("stock" in req.body) {
+      applyStockToVariants(product, req.body.stock);
     }
 
     await product.save();
