@@ -3337,6 +3337,52 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 .vstock__total strong { color: var(--slate-900, #0f172a); font-variant-numeric: tabular-nums; }
 
+/* Colour editor on the new-product drawer. One row per colour: swatch, name,
+   its own photograph, its own stock, and a way to take it back out again. */
+.cedit { display: grid; gap: 8px; margin-bottom: 10px; }
+.cedit:empty { margin-bottom: 0; }
+.cedit__row {
+  display: grid;
+  grid-template-columns: 44px minmax(120px, 1fr) minmax(160px, 1.6fr) 84px 34px;
+  align-items: center;
+  gap: 8px;
+}
+.cedit__row input {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  min-width: 0;               /* let the columns actually shrink */
+}
+.cedit__hex { padding: 2px; height: 34px; cursor: pointer; }
+.cedit__stock { text-align: right; }
+.cedit__row input:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
+.cedit__remove {
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-soft, #64748b);
+  font-size: 1.15rem; line-height: 1;
+  transition: background-color .16s var(--ease), color .16s var(--ease), border-color .16s var(--ease);
+}
+.cedit__remove:hover { background: #FEE2E2; border-color: #FCA5A5; color: #B91C1C; }
+
+@media (max-width: 720px) {
+  /* Stacked, because five columns in a drawer on a phone is unusable. */
+  .cedit__row {
+    grid-template-columns: 44px 1fr 34px;
+    grid-template-areas: "hex label remove" "img img img" "stock stock stock";
+    row-gap: 6px;
+  }
+  .cedit__hex { grid-area: hex; }
+  .cedit__label { grid-area: label; }
+  .cedit__image { grid-area: img; }
+  .cedit__stock { grid-area: stock; text-align: left; }
+  .cedit__remove { grid-area: remove; }
+}
+
 .account__item--admin { color: var(--indigo-600); font-weight: 650; }
 .account__item--admin svg { color: var(--indigo-600); }
 .account__item--admin:hover { background: var(--indigo-50); color: var(--indigo-700); }

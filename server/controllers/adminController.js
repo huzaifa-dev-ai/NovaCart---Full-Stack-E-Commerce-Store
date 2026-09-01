@@ -204,19 +204,27 @@ async function createProduct(req, res, next) {
     const highest = await Product.findOne().sort({ id: -1 }).select("id");
     const nextId = (highest ? highest.id : 0) + 1;
 
+    // Colours, when the form offered any. They settle three things at once:
+    // the variants themselves, which one is the default, and the product
+    // image — the card and the default swatch have to show the same photo.
+    const variants = buildColorVariants(body.colors);
+
     const product = await Product.create({
       id: nextId,
       name: body.name,
       category: body.category,
       price: body.price,
       oldPrice: body.oldPrice === "" || body.oldPrice === undefined ? null : body.oldPrice,
-      image: body.image,
+      image: variants ? variants.image : body.image,
       shortDescription: body.shortDescription,
       description: body.description || "",
       features: Array.isArray(body.features) ? body.features.filter(Boolean) : [],
       rating: body.rating ?? 0,
       reviews: body.reviews ?? 0,
-      stock: body.stock ?? 0,
+      // With colours the total is the sum of the parts, never a separate number.
+      stock: variants ? variants.stock : (body.stock ?? 0),
+      colors: variants ? variants.colors : [],
+      defaultColorId: variants ? variants.defaultColorId : null,
       badge: body.badge || null,
       featured: body.featured === true,
       active: true
@@ -276,6 +284,91 @@ function applyStockToVariants(product, total) {
     colour.inStock = shares[i] > 0;
   });
   product.stock = shares.reduce((sum, n) => sum + n, 0);
+}
+
+/**
+ * Turn the colour rows typed into the new-product form into stored variants.
+ *
+ * Returns null when no colours were given, so a plain single-image product
+ * carries on working exactly as before.
+ *
+ * Two things are settled here rather than left to the caller, because the
+ * storefront depends on both:
+ *   - the card and the default swatch must show the SAME photograph, so the
+ *     product image is taken from the first colour rather than typed twice
+ *   - product.stock is the sum of the parts, never its own separate number
+ */
+const MAX_COLORS = 12;
+
+function slugifyLabel(label) {
+  return String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+/**
+ * Image paths are same-origin relative paths under assets/, and nothing else.
+ * The CSP only serves images from 'self' anyway, so an absolute URL would
+ * render as a broken image; refusing it here says so plainly instead of
+ * storing something that can never display. It also keeps a scheme like
+ * javascript: or a traversal out of an attribute heading for the DOM.
+ */
+function badImagePath(value) {
+  const path = String(value || "").trim();
+  if (!path) { return "An image path is required."; }
+  if (!/^assets\/[A-Za-z0-9 ()._\/-]+$/.test(path)) {
+    return "Use a path inside assets/, for example assets/images/products/framed/name.jpg";
+  }
+  if (path.includes("..")) { return "An image path cannot step outside assets/."; }
+  return null;
+}
+
+function buildColorVariants(raw) {
+  if (!Array.isArray(raw) || !raw.length) { return null; }
+
+  const errors = [];
+  if (raw.length > MAX_COLORS) {
+    errors.push({ field: "colors", message: `A product can have at most ${MAX_COLORS} colours.` });
+  }
+
+  const seen = new Set();
+  const colors = raw.slice(0, MAX_COLORS).map((row, i) => {
+    const at = (msg) => errors.push({ field: `colors.${i}`, message: msg });
+    const label = String((row && row.label) || "").trim();
+    const swatchHex = String((row && row.swatchHex) || "").trim();
+    const image = String((row && row.image) || "").trim();
+    const count = Number(row && row.stockCount);
+
+    if (!label) { at("Give this colour a name."); }
+    if (label.length > 40) { at("A colour name must be 40 characters or fewer."); }
+    if (!/^#[0-9a-f]{6}$/i.test(swatchHex)) { at(`"${label || "This colour"}" needs a swatch like #1E293B.`); }
+    const imageProblem = badImagePath(image);
+    if (imageProblem) { at(`${label || "This colour"}: ${imageProblem}`); }
+    if (!Number.isInteger(count) || count < 0 || count > 100000) {
+      at(`Stock for ${label || "this colour"} must be a whole number of 0 or more.`);
+    }
+
+    // Two colours can be named alike by accident; the ids still have to differ.
+    let id = slugifyLabel(label) || `color-${i + 1}`;
+    let n = 2;
+    while (seen.has(id)) { id = `${slugifyLabel(label) || "color"}-${n}`; n += 1; }
+    seen.add(id);
+
+    return {
+      id, label, swatchHex, image, gallery: [],
+      stockCount: Number.isInteger(count) && count >= 0 ? count : 0,
+      inStock: Number.isInteger(count) && count > 0
+    };
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+
+  return {
+    colors,
+    defaultColorId: colors[0].id,
+    image: colors[0].image,
+    stock: colors.reduce((sum, c) => sum + c.stockCount, 0)
+  };
 }
 
 /**

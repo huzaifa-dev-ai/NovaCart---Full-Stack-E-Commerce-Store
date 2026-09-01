@@ -165,6 +165,13 @@ const returnRules = [
 
 const productFieldRules = (optional) => {
   const maybe = (chain) => (optional ? chain.optional() : chain);
+    /* When colour rows are supplied they settle both the product image and
+       the stock total - the image comes from the first colour so the card and
+       the default swatch cannot disagree, and the total is the sum of the
+       parts. Demanding them separately would be asking for a number that is
+       about to be overwritten. */
+    const withoutColors = (_value, { req }) =>
+      !(Array.isArray(req.body.colors) && req.body.colors.length);
   return [
     maybe(body("name").trim().notEmpty().withMessage("Product name is required"))
       .bail().isLength({ max: 120 }).withMessage("Name must be 120 characters or fewer"),
@@ -172,10 +179,10 @@ const productFieldRules = (optional) => {
       .bail().isLength({ max: 60 }).withMessage("Category must be 60 characters or fewer"),
     maybe(body("price").notEmpty().withMessage("Price is required"))
       .bail().isFloat({ min: 0, max: 1000000 }).withMessage("Price must be a positive number"),
-    maybe(body("image").trim().notEmpty().withMessage("Image path is required")),
+    maybe(body("image").if(withoutColors).trim().notEmpty().withMessage("Image path is required")),
     maybe(body("shortDescription").trim().notEmpty().withMessage("Short description is required"))
       .bail().isLength({ max: 200 }).withMessage("Short description must be 200 characters or fewer"),
-    maybe(body("stock").notEmpty().withMessage("Stock level is required"))
+    maybe(body("stock").if(withoutColors).notEmpty().withMessage("Stock level is required"))
       .bail().isInt({ min: 0, max: 100000 }).withMessage("Stock must be a whole number"),
     body("oldPrice").optional({ nullable: true, checkFalsy: true })
       .isFloat({ min: 0 }).withMessage("Old price must be a positive number"),

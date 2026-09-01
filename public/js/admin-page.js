@@ -326,6 +326,71 @@
     };
     inputs.forEach(function (el) { el.addEventListener("input", recount); });
   }
+  /**
+   * The colour editor, offered when creating a product.
+   *
+   * A colour needs four things: a name, a swatch, its own photograph and its
+   * own stock. Leave the whole section empty and you get a plain
+   * single-image product, which is what most of the catalogue is.
+   *
+   * The product's own image is NOT asked for separately here — the card and
+   * the default swatch have to show the same photograph, so it is taken from
+   * the first colour rather than typed twice and left to drift.
+   */
+  function colorEditor() {
+    return '<div class="field field--wide">' +
+      '<label>Colours <span style="color:#94A3B8">(optional — leave empty for a single-image product)</span></label>' +
+      '<div class="cedit" id="colorRows"></div>' +
+      '<button type="button" class="btn btn--outline btn--sm" id="addColorRow">+ Add a colour</button>' +
+      '<span class="field-error"></span></div>';
+  }
+
+  /** One editable colour: name, swatch, photo and its own stock. */
+  function colorRowHtml(n) {
+    return '<div class="cedit__row" data-color-row>' +
+      '<input type="color" class="cedit__hex" value="#1E293B" aria-label="Swatch colour" />' +
+      '<input type="text" class="cedit__label" placeholder="Colour name, e.g. Onyx Black"' +
+        ' aria-label="Colour name" />' +
+      '<input type="text" class="cedit__image" placeholder="assets/images/products/framed/…"' +
+        ' aria-label="Photo for this colour" />' +
+      '<input type="number" class="cedit__stock" min="0" step="1" value="0"' +
+        ' aria-label="Stock for this colour" />' +
+      '<button type="button" class="cedit__remove" aria-label="Remove this colour">&times;</button>' +
+    "</div>";
+  }
+
+  /** Add/remove wiring for the colour rows. */
+  function wireColorEditor() {
+    var rows = document.getElementById("colorRows");
+    var add = document.getElementById("addColorRow");
+    if (!rows || !add) { return; }
+
+    add.addEventListener("click", function () {
+      rows.insertAdjacentHTML("beforeend", colorRowHtml());
+      var last = rows.lastElementChild;
+      var name = last.querySelector(".cedit__label");
+      if (name) { name.focus(); }   // land where they are about to type
+    });
+
+    rows.addEventListener("click", function (event) {
+      var remove = event.target.closest(".cedit__remove");
+      if (!remove) { return; }
+      var row = remove.closest("[data-color-row]");
+      if (row) { row.remove(); }
+    });
+  }
+
+  /** Whatever colour rows are on screen, in the order they appear. */
+  function readColorRows() {
+    return [].slice.call(document.querySelectorAll("[data-color-row]")).map(function (row) {
+      return {
+        label: row.querySelector(".cedit__label").value.trim(),
+        swatchHex: row.querySelector(".cedit__hex").value.trim(),
+        image: row.querySelector(".cedit__image").value.trim(),
+        stockCount: parseInt(row.querySelector(".cedit__stock").value, 10)
+      };
+    });
+  }
   function productForm(p) {
     var product = p || {};
     return '<form id="productForm" novalidate><div class="form-grid">' +
@@ -336,6 +401,10 @@
       stockFields(product) +
       selectField("Badge", "pBadge", product.badge, [["", "None"], ["Sale", "Sale"], ["New", "New"]]) +
       field("Image path", "pImage", product.image || "assets/images/products/", "text", true, true) +
+      // Colours are offered when creating. On an existing product the drawer
+      // already shows a stock box per colour; renaming or re-photographing a
+      // colour is a bigger job and is not offered here yet.
+      (p ? "" : colorEditor()) +
       field("Short description", "pShort", product.shortDescription, "text", true, true) +
       textField("Full description", "pDescription", product.description, true) +
       textField("Features (one per line)", "pFeatures", (product.features || []).join("\n"), true) +
@@ -405,6 +474,18 @@
     for (var key in stock) {
       if (Object.prototype.hasOwnProperty.call(stock, key)) { payload[key] = stock[key]; }
     }
+
+    // Colours, when the create form is showing them. The first one supplies
+    // the product image and the counts supply the total, so neither is typed
+    // twice and the card can never disagree with the default swatch.
+    var colors = readColorRows();
+    if (colors.length) {
+      payload.colors = colors;
+      if (colors[0].image) { payload.image = colors[0].image; }
+      payload.stock = colors.reduce(function (sum, c) {
+        return sum + (isNaN(c.stockCount) ? 0 : c.stockCount);
+      }, 0);
+    }
     return payload;
   }
 
@@ -435,6 +516,7 @@
     );
 
     wireStockTotal();
+    wireColorEditor();
 
     document.getElementById("saveProduct").addEventListener("click", function () {
       var button = this;
