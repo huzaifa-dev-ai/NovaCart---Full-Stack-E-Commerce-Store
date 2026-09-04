@@ -125,11 +125,35 @@ async function createOrder(req, res, next) {
 
     // Reserve the stock. Guarded by $gte so two simultaneous orders for the
     // last unit cannot both succeed.
+    //
+    // Both counts move together. A product records stock twice - the
+    // product-level total and the per-colour count - and the check above
+    // validates against the COLOUR. Decrementing only the total left the
+    // colour counts frozen at their opening figure, so the same colour could
+    // be sold over and over: nothing that was checked ever went down.
     for (const line of orderItems) {
-      await Product.updateOne(
-        { id: line.productId, stock: { $gte: line.qty } },
-        { $inc: { stock: -line.qty } }
-      );
+      if (line.colorId) {
+        // One atomic update guarded on BOTH, so a colour cannot go negative
+        // even if two orders for its last unit arrive together.
+        await Product.updateOne(
+          {
+            id: line.productId,
+            stock: { $gte: line.qty },
+            colors: { $elemMatch: { id: line.colorId, stockCount: { $gte: line.qty } } }
+          },
+          { $inc: { stock: -line.qty, "colors.$.stockCount": -line.qty } }
+        );
+        // A colour that has just run out should stop offering itself.
+        await Product.updateOne(
+          { id: line.productId, colors: { $elemMatch: { id: line.colorId, stockCount: { $lte: 0 } } } },
+          { $set: { "colors.$.inStock": false } }
+        );
+      } else {
+        await Product.updateOne(
+          { id: line.productId, stock: { $gte: line.qty } },
+          { $inc: { stock: -line.qty } }
+        );
+      }
     }
 
     res.status(201).json({ success: true, order });
@@ -252,10 +276,19 @@ async function updateOrderStatus(req, res, next) {
       );
     }
 
-    // Cancelling returns the reserved stock to the shelf.
+    // Cancelling returns the reserved stock to the shelf — to the colour it
+    // came off, as well as to the total, or the two drift apart again.
     if (status === "cancelled") {
       for (const line of order.items) {
-        await Product.updateOne({ id: line.productId }, { $inc: { stock: line.qty } });
+        if (line.colorId) {
+          await Product.updateOne(
+            { id: line.productId, "colors.id": line.colorId },
+            { $inc: { stock: line.qty, "colors.$.stockCount": line.qty },
+              $set: { "colors.$.inStock": true } }
+          );
+        } else {
+          await Product.updateOne({ id: line.productId }, { $inc: { stock: line.qty } });
+        }
       }
     }
 
