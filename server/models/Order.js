@@ -10,6 +10,7 @@
    ============================================================= */
 
 const mongoose = require("mongoose");
+const { PAYMENT_METHODS, PAYMENT_STATUSES } = require("../config/payment");
 
 const STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
@@ -83,6 +84,41 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
       index: true
     },
+
+    /* ---------- Payment ----------
+       These four were read and written all over the payment controller but
+       never declared here, and Mongoose in strict mode DROPS a write to a
+       path it does not know. So create-intent set paymentRef, saved nothing,
+       and verify then found no reference and refused to mark the order paid:
+       a card could be charged and the order stay unpaid forever. The lists
+       come from config/payment.js, which already claimed to be mirrored
+       here.                                                                */
+
+    paymentMethod: {
+      type: String,
+      enum: PAYMENT_METHODS,
+      default: "cod"
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: PAYMENT_STATUSES,
+      default: "unpaid",
+      index: true
+    },
+
+    // Stripe's PaymentIntent id. Indexed because the webhook arrives knowing
+    // only this, and has to find the order from it.
+    paymentRef: { type: String, default: null, index: true },
+
+    // Brand, last four, receipt url — never a card number, which this server
+    // is never given and must never store.
+    paymentDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    },
+
+    paidAt: { type: Date, default: null },
 
     timeline: { type: [timelineSchema], default: [] },
 

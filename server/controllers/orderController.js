@@ -30,7 +30,7 @@ function money(value) {
 
 async function createOrder(req, res, next) {
   try {
-    const { customer, items } = req.body;
+    const { customer, items, paymentMethod } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       throw ApiError.badRequest("Your cart is empty.", { code: "EMPTY_CART" });
@@ -115,6 +115,12 @@ async function createOrder(req, res, next) {
           shipping,
           total,
           status: "pending",
+          // Only ever "cod" or "card"; anything else falls back to the safe
+          // one rather than being stored. Without this every order took the
+          // schema default, and a card order could never be paid for because
+          // create-intent refuses anything marked cash on delivery.
+          paymentMethod: paymentMethod === "card" ? "card" : "cod",
+          paymentStatus: "unpaid",
           timeline: [{ status: "pending", note: "Order placed", by: "system" }]
         });
       } catch (error) {
