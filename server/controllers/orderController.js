@@ -68,8 +68,28 @@ async function createOrder(req, res, next) {
         });
       }
 
-      const activeColor = colorId || product.defaultColorId || (product.colors && product.colors[0] && product.colors[0].id);
+      const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
+      const activeColor = colorId || product.defaultColorId || (hasColors ? product.colors[0].id : null);
       const colorObj = (product.colors || []).find((c) => c.id === activeColor);
+
+      // A colour the product does not have used to sail straight through: the
+      // check below fell back to product.stock, but the reservation matches on
+      // colors.$, which matched nothing - so the sale went ahead and not one
+      // unit was deducted, repeatably and without limit.
+      //
+      // Not only reachable by a crafted request: the cart keeps colorId in
+      // localStorage, so a shopper whose cart predates a colour being renamed
+      // or removed in the dashboard sends a dead id in good faith.
+      if (hasColors && !colorObj) {
+        throw ApiError.badRequest(
+          `That colour is no longer available for ${product.name}. Please pick another.`,
+          { code: "COLOR_UNAVAILABLE" }
+        );
+      }
+      // Never carry a client string forward on a product with no colours
+      // either, or the reservation takes the colour branch and silently
+      // matches nothing there too.
+      const resolvedColor = colorObj ? colorObj.id : null;
 
       const availableStock = colorObj ? colorObj.stockCount : product.stock;
       if (availableStock < qty) {
@@ -82,7 +102,7 @@ async function createOrder(req, res, next) {
       orderItems.push({
         product: product._id,
         productId: product.id,
-        colorId: activeColor || null,
+        colorId: resolvedColor,
         colorLabel: colorObj ? colorObj.label : "",
         name: product.name,
         image: colorObj ? colorObj.image : product.image,
@@ -137,29 +157,71 @@ async function createOrder(req, res, next) {
     // validates against the COLOUR. Decrementing only the total left the
     // colour counts frozen at their opening figure, so the same colour could
     // be sold over and over: nothing that was checked ever went down.
-    for (const line of orderItems) {
-      if (line.colorId) {
-        // One atomic update guarded on BOTH, so a colour cannot go negative
-        // even if two orders for its last unit arrive together.
-        await Product.updateOne(
-          {
-            id: line.productId,
-            stock: { $gte: line.qty },
-            colors: { $elemMatch: { id: line.colorId, stockCount: { $gte: line.qty } } }
-          },
-          { $inc: { stock: -line.qty, "colors.$.stockCount": -line.qty } }
-        );
+    // Each reservation's RESULT is checked. The guards are only worth
+    // anything if a query that matched nothing counts as a failure:
+    // previously the result was discarded, so a guard that refused to fire
+    // looked identical to one that succeeded and the order was confirmed
+    // with nothing deducted.
+    //
+    // The order document already exists here, so a line that cannot be
+    // reserved has to put back the lines before it and remove the order.
+    // All of it, or none of it.
+    const reserved = [];
+    try {
+      for (const line of orderItems) {
+        let result;
+        if (line.colorId) {
+          // One atomic update guarded on BOTH, so a colour cannot go
+          // negative even if two orders for its last unit arrive together.
+          result = await Product.updateOne(
+            {
+              id: line.productId,
+              stock: { $gte: line.qty },
+              colors: { $elemMatch: { id: line.colorId, stockCount: { $gte: line.qty } } }
+            },
+            { $inc: { stock: -line.qty, "colors.$.stockCount": -line.qty } }
+          );
+        } else {
+          result = await Product.updateOne(
+            { id: line.productId, stock: { $gte: line.qty } },
+            { $inc: { stock: -line.qty } }
+          );
+        }
+
+        // The guard did not match: somebody took the last of it between the
+        // availability check above and this write.
+        if (result.modifiedCount !== 1) {
+          throw ApiError.conflict(
+            `${line.name} sold out while you were checking out.`,
+            { code: "INSUFFICIENT_STOCK" }
+          );
+        }
+        reserved.push(line);
+
         // A colour that has just run out should stop offering itself.
-        await Product.updateOne(
-          { id: line.productId, colors: { $elemMatch: { id: line.colorId, stockCount: { $lte: 0 } } } },
-          { $set: { "colors.$.inStock": false } }
-        );
-      } else {
-        await Product.updateOne(
-          { id: line.productId, stock: { $gte: line.qty } },
-          { $inc: { stock: -line.qty } }
-        );
+        if (line.colorId) {
+          await Product.updateOne(
+            { id: line.productId, colors: { $elemMatch: { id: line.colorId, stockCount: { $lte: 0 } } } },
+            { $set: { "colors.$.inStock": false } }
+          );
+        }
       }
+    } catch (reserveError) {
+      for (const line of reserved) {
+        if (line.colorId) {
+          await Product.updateOne(
+            { id: line.productId, "colors.id": line.colorId },
+            {
+              $inc: { stock: line.qty, "colors.$.stockCount": line.qty },
+              $set: { "colors.$.inStock": true }
+            }
+          );
+        } else {
+          await Product.updateOne({ id: line.productId }, { $inc: { stock: line.qty } });
+        }
+      }
+      await Order.deleteOne({ _id: order._id });
+      throw reserveError;
     }
 
     res.status(201).json({ success: true, order });
