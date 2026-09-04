@@ -18,6 +18,10 @@ const RETURN_WINDOW_DAYS = 30;
 const returnItemSchema = new mongoose.Schema(
   {
     productId: { type: Number, required: true },
+    // Which colour came back. Without it a refund can only credit the product
+    // total, and the per-colour counts the shop actually sells from never
+    // recover the returned units.
+    colorId: { type: String, default: null },
     name: { type: String, required: true },
     qty: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 }

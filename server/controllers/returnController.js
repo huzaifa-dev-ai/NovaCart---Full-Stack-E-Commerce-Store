@@ -53,34 +53,100 @@ async function requestReturn(req, res, next) {
       );
     }
 
-    // Only lines that are actually on the order, and never more than were bought.
-    const orderLines = new Map(order.items.map((line) => [line.productId, line]));
-    const requested = [];
+    // Only lines that are on the order, never more than were bought, and
+    // never more than is still outstanding after earlier returns.
+    //
+    // Duplicates used to be pushed straight through: sending the same line
+    // three times was checked three times INDIVIDUALLY against what was
+    // bought, and all three passed. A single item bought once came back as
+    // three refundable lines. Quantities are accumulated per line first and
+    // the TOTAL is what gets checked.
+    //
+    // Lines are keyed by product AND colour, because an order can hold the
+    // same product twice in two colours and matching on product alone would
+    // confuse them.
+    const keyOf = (productId, colorId) => `${productId}::${colorId || ""}`;
+    const orderLines = new Map(order.items.map((line) => [keyOf(line.productId, line.colorId), line]));
 
+    // What earlier returns already claimed, so the same goods cannot be
+    // refunded twice over several requests.
+    const settled = await Return.find({
+      order: order._id,
+      status: { $in: ["requested", "approved", "refunded"] }
+    }).lean();
+    const alreadyClaimed = new Map();
+    settled.forEach((prev) => {
+      (prev.items || []).forEach((l) => {
+        const k = keyOf(l.productId, l.colorId);
+        alreadyClaimed.set(k, (alreadyClaimed.get(k) || 0) + (Number(l.qty) || 0));
+      });
+    });
+
+    const wanted = new Map();
     for (const entry of Array.isArray(items) ? items : []) {
       const productId = Number(entry.productId ?? entry.id);
-      const line = orderLines.get(productId);
+      const colorId = entry.colorId ? String(entry.colorId).trim() : null;
+      const k = keyOf(productId, colorId);
+      const line = orderLines.get(k);
       if (!line) {
         throw ApiError.badRequest("One of those items isn't on this order.", {
           code: "ITEM_NOT_ON_ORDER"
         });
       }
       const qty = Math.floor(Number(entry.qty)) || line.qty;
-      if (qty < 1 || qty > line.qty) {
+      if (qty < 1) {
         throw ApiError.badRequest(
           `You can return between 1 and ${line.qty} of ${line.name}.`,
           { code: "BAD_QTY" }
         );
       }
-      requested.push({ productId, name: line.name, qty, unitPrice: line.unitPrice });
+      wanted.set(k, { line, qty: (wanted.get(k) ? wanted.get(k).qty : 0) + qty });
+    }
+
+    const requested = [];
+    for (const [k, { line, qty }] of wanted.entries()) {
+      const remaining = line.qty - (alreadyClaimed.get(k) || 0);
+      if (remaining <= 0) {
+        throw ApiError.badRequest(
+          `${line.name} has already been returned on this order.`,
+          { code: "ALREADY_RETURNED" }
+        );
+      }
+      if (qty > remaining) {
+        throw ApiError.badRequest(
+          `You can return between 1 and ${remaining} of ${line.name}.`,
+          { code: "BAD_QTY" }
+        );
+      }
+      requested.push({
+        productId: line.productId,
+        colorId: line.colorId || null,
+        name: line.name,
+        qty,
+        unitPrice: line.unitPrice
+      });
     }
 
     // No items given means "return the whole order".
     const finalItems = requested.length
       ? requested
-      : order.items.map((l) => ({
-          productId: l.productId, name: l.name, qty: l.qty, unitPrice: l.unitPrice
-        }));
+      // "the whole order" means whatever has not already come back.
+      : order.items
+          .map((l) => ({
+            productId: l.productId,
+            colorId: l.colorId || null,
+            name: l.name,
+            qty: l.qty - (alreadyClaimed.get(keyOf(l.productId, l.colorId)) || 0),
+            unitPrice: l.unitPrice
+          }))
+          .filter((l) => l.qty > 0);
+
+    if (!finalItems.length) {
+      throw ApiError.badRequest(
+        "Everything on this order has already been returned.",
+        { code: "ALREADY_RETURNED" }
+      );
+    }
 
     let created = null;
     for (let attempt = 0; attempt < 5 && !created; attempt += 1) {
@@ -188,14 +254,11 @@ async function updateReturn(req, res, next) {
       );
     }
 
-    // Refunding puts the goods back on the shelf, unless told otherwise.
-    if (status === "refunded" && restock !== false) {
-      for (const line of request.items) {
-        await Product.updateOne({ id: line.productId }, { $inc: { stock: line.qty } });
-      }
-    }
-
     if (status === "refunded") {
+      // The amount is settled BEFORE anything goes back on the shelf. It used
+      // to be the other way round, so a refund rejected for a bad amount had
+      // already restocked the goods - inventory created out of nothing, every
+      // time an admin fat-fingered the figure.
       const requestedValue = request.items.reduce((s, l) => s + l.unitPrice * l.qty, 0);
       const amount = refundAmount === undefined ? requestedValue : Number(refundAmount);
       if (!Number.isFinite(amount) || amount < 0 || amount > requestedValue + 0.01) {
@@ -205,6 +268,28 @@ async function updateReturn(req, res, next) {
         );
       }
       request.refundAmount = money(amount);
+
+      // Only now, with the amount accepted, do the goods return to the shelf.
+      //
+      // To the COLOUR they came off, as well as the product total. Crediting
+      // only the total left the per-colour counts - which is what the product
+      // page shows and what createOrder validates against - permanently short
+      // of every unit ever returned.
+      if (restock !== false) {
+        for (const line of request.items) {
+          if (line.colorId) {
+            await Product.updateOne(
+              { id: line.productId, "colors.id": line.colorId },
+              {
+                $inc: { stock: line.qty, "colors.$.stockCount": line.qty },
+                $set: { "colors.$.inStock": true }
+              }
+            );
+          } else {
+            await Product.updateOne({ id: line.productId }, { $inc: { stock: line.qty } });
+          }
+        }
+      }
     }
 
     request.status = status;
