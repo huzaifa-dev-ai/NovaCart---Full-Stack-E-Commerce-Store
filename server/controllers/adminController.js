@@ -414,6 +414,46 @@ function applyVariantStock(product, variantStock) {
 }
 
 /**
+ * Repoint a colour at a different photograph, from
+ * `variantImages: { "<colorId>": "assets/..." }`.
+ *
+ * Same narrow shape as the stock map, and the same path rule: relative, and
+ * inside assets/. Colours left out keep the photo they had.
+ *
+ * The catalogue card shows the DEFAULT colour's photograph, so changing that
+ * one moves the card with it. Leaving them to diverge is how a product ends
+ * up advertised in a colour it no longer opens on.
+ */
+function applyVariantImages(product, variantImages) {
+  const colors = product.colors || [];
+  const errors = [];
+
+  Object.keys(variantImages).forEach((colorId) => {
+    const colour = colors.find((c) => c.id === colorId);
+    if (!colour) {
+      errors.push({ field: `variantImages.${colorId}`,
+        message: `This product has no colour called "${colorId}".` });
+      return;
+    }
+    const next = String(variantImages[colorId] || "").trim();
+    const problem = badImagePath(next);
+    if (problem) {
+      errors.push({ field: `variantImages.${colorId}`, message: `${colour.label}: ${problem}` });
+      return;
+    }
+    colour.image = next;
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+
+  const fallback = colors[0];
+  const defaultColour = colors.find((c) => c.id === product.defaultColorId) || fallback;
+  if (defaultColour) { product.image = defaultColour.image; }
+}
+
+/**
  * A sale price only means anything below the original, so the model refuses
  * oldPrice <= price. Its message names only "old price", which is baffling
  * when what you just did was raise the price — you get told off about a field
@@ -477,6 +517,12 @@ async function updateProduct(req, res, next) {
       applyVariantStock(product, req.body.variantStock);
     } else if ("stock" in req.body) {
       applyStockToVariants(product, req.body.stock);
+    }
+
+    // Images before the sale-price check, so a bad path is reported alongside
+    // everything else rather than after a save has already happened.
+    if (req.body.variantImages && typeof req.body.variantImages === "object") {
+      applyVariantImages(product, req.body.variantImages);
     }
 
     assertSalePriceMakesSense(product, req.body);

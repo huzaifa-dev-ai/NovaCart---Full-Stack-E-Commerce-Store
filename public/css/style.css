@@ -3308,7 +3308,8 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 .vstock__row {
   display: grid;
-  grid-template-columns: 20px 1fr 92px;
+  /* swatch · name · that colour's photo · its count */
+  grid-template-columns: 20px minmax(96px, 0.8fr) minmax(150px, 2fr) 84px;
   align-items: center;
   gap: 10px;
 }
@@ -3319,6 +3320,42 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   border: 1px solid rgba(15, 23, 42, .25);
 }
 .vstock__label { font-size: .88rem; font-weight: 600; margin: 0; }
+.vstock__image {
+  width: 100%;
+  min-width: 0;                 /* let the column actually shrink */
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: .82rem;
+}
+.vstock__image:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
+/* Which colour the catalogue card follows, said once where it matters. */
+.vstock__flag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, .12);
+  color: var(--indigo-600);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.vstock__hint { display: block; margin-top: 3px; font-size: .78rem; }
+
+@media (max-width: 720px) {
+  /* Four columns in a drawer on a phone is unusable; stack instead. */
+  .vstock__row {
+    grid-template-columns: 20px 1fr 84px;
+    grid-template-areas: "swatch name stock" "img img img";
+    row-gap: 6px;
+  }
+  .vstock__swatch { grid-area: swatch; }
+  .vstock__label { grid-area: name; }
+  .vstock__input { grid-area: stock; }
+  .vstock__image { grid-area: img; }
+}
 .vstock__input {
   width: 100%;
   padding: 7px 10px;

@@ -295,20 +295,29 @@
     var total = colors.reduce(function (sum, c) { return sum + (Number(c.stockCount) || 0); }, 0);
 
     var rows = colors.map(function (c) {
+      var isDefault = c.id === product.defaultColorId;
       return '<div class="vstock__row">' +
         '<span class="vstock__swatch" style="background:' + esc(c.swatchHex || "#64748b") + '"' +
           ' aria-hidden="true"></span>' +
-        '<label class="vstock__label" for="vstock-' + esc(c.id) + '">' + esc(c.label) + "</label>" +
+        '<label class="vstock__label" for="vstock-' + esc(c.id) + '">' + esc(c.label) +
+          (isDefault ? ' <span class="vstock__flag">default</span>' : "") + "</label>" +
+        '<input class="vstock__image" type="text" spellcheck="false"' +
+          ' id="vimage-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Photo for ' + esc(c.label) + '"' +
+          ' placeholder="assets/images/products/framed/…"' +
+          ' value="' + esc(c.image || "") + '" />' +
         '<input class="vstock__input" type="number" min="0" step="1" inputmode="numeric"' +
           ' id="vstock-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Stock for ' + esc(c.label) + '"' +
           ' value="' + (Number(c.stockCount) || 0) + '" />' +
       "</div>";
     }).join("");
 
     return '<div class="field field--wide">' +
-      '<label>Stock by colour</label>' +
+      '<label>Colours — photo and stock</label>' +
       '<div class="vstock">' + rows +
-        '<p class="vstock__total">Total in stock: <strong id="pStockTotal">' + total + "</strong></p>" +
+        '<p class="vstock__total">Total in stock: <strong id="pStockTotal">' + total + "</strong>" +
+          '<span class="vstock__hint">The card in the catalogue follows the default colour.</span></p>' +
       "</div>" +
       '<span class="field-error"></span></div>';
   }
@@ -446,7 +455,14 @@
     boxes.forEach(function (el) {
       variantStock[el.getAttribute("data-color-id")] = parseInt(el.value, 10);
     });
-    return { variantStock: variantStock };
+
+    // Each colour's photograph travels with its count — same rows, same save.
+    var variantImages = {};
+    [].slice.call(document.querySelectorAll(".vstock__image")).forEach(function (el) {
+      variantImages[el.getAttribute("data-color-id")] = el.value.trim();
+    });
+
+    return { variantStock: variantStock, variantImages: variantImages };
   }
   function readProductForm() {
     var features = document.getElementById("pFeatures").value
