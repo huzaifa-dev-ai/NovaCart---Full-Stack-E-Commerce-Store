@@ -209,6 +209,17 @@ async function createProduct(req, res, next) {
     // image — the card and the default swatch have to show the same photo.
     const variants = buildColorVariants(body.colors);
 
+    // The plain image field was only ever checked for being non-empty, so a
+    // Windows path pasted out of Explorer sailed through and produced a live
+    // product with a broken picture. Same rule as the colour paths.
+    if (!variants) {
+      const problem = badImagePath(body.image);
+      if (problem) {
+        throw ApiError.validation("Please check the highlighted fields.",
+          [{ field: "image", message: problem }]);
+      }
+    }
+
     const product = await Product.create({
       id: nextId,
       name: body.name,
@@ -523,6 +534,14 @@ async function updateProduct(req, res, next) {
     // everything else rather than after a save has already happened.
     if (req.body.variantImages && typeof req.body.variantImages === "object") {
       applyVariantImages(product, req.body.variantImages);
+    }
+
+    if ("image" in req.body) {
+      const problem = badImagePath(req.body.image);
+      if (problem) {
+        throw ApiError.validation("Please check the highlighted fields.",
+          [{ field: "image", message: problem }]);
+      }
     }
 
     assertSalePriceMakesSense(product, req.body);

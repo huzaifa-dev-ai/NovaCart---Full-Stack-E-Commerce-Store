@@ -260,24 +260,242 @@
     placeBtn.disabled = true;
     placeBtn.textContent = "Placing order…";
 
-    submitOrder(payload)
+    var payingByCard = chosenMethod() === "card";
+
+    // On a retry after a decline the order already exists - reuse it rather
+    // than placing another and reserving the stock a second time.
+    var ordering = pendingOrder ? Promise.resolve(pendingOrder) : submitOrder(payload);
+
+    ordering
       .then(function (order) {
+        if (!payingByCard) { return order; }
+        pendingOrder = order;
+        placeBtn.textContent = "Contacting your bank…";
+        return payForOrder(order).then(function () { return order; });
+      })
+      .then(function (order) {
+        pendingOrder = null;
         App.Cart.clear();
         window.location.href = "success.html?order=" + encodeURIComponent(order.number);
       })
       .catch(function (error) {
-        showOrderError(error);
+        // A declined card belongs beside the card field; anything else is an
+        // order-level problem and belongs where those already appear.
+        if (error.cardError) { showCardError(error.message); }
+        else { showOrderError(error); }
         placeBtn.disabled = false;
-        placeBtn.innerHTML = 'Place Order <span class="btn__arrow" aria-hidden="true">&rarr;</span>';
+        placeBtn.innerHTML = pendingOrder
+          ? 'Try payment again <span class="btn__arrow" aria-hidden="true">&rarr;</span>'
+          : 'Place Order <span class="btn__arrow" aria-hidden="true">&rarr;</span>';
       });
   }
 
+  /* ---------- Paying for an order by card ---------- */
+
+  /*  create-intent needs an order to exist, and creating an order reserves
+      stock. So a declined card leaves stock held by an unpaid order. Rather
+      than place a SECOND order on a retry - which would reserve the stock
+      twice and strand an orphan - the order is kept and a fresh intent is
+      raised against the same one. Holding stock while a shopper is mid-
+      payment is wanted anyway: nobody wants the last unit sold out from
+      under the card they are typing.                                       */
+
+  var pendingOrder = null;      // an order awaiting payment, kept for retries
+
+  function postJson(path, body) {
+    return fetch(apiBase() + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (!response.ok) {
+          var error = new Error(data.error || "That didn't go through. Please try again.");
+          error.code = data.code;
+          error.status = response.status;
+          throw error;
+        }
+        return data;
+      });
+    });
+  }
+
+  /**
+   * Take payment for an order that already exists.
+   *
+   * Nothing here decides the order is paid. The browser confirms the card
+   * with Stripe directly, then asks the server to verify - and the server
+   * re-fetches the PaymentIntent from Stripe and checks it itself. A forged
+   * call from this page marks nothing.
+   */
+  function payForOrder(order) {
+    var orderId = order._id || order.id;
+
+    return postJson("/payments/create-intent", { orderId: orderId })
+      .then(function (intent) {
+        // No keys configured: the server stands in for Stripe and no card
+        // details were ever collected.
+        if (intent.simulation) {
+          return postJson("/payments/simulate", { orderId: orderId });
+        }
+        if (!stripe || !cardElement) {
+          throw new Error("The card form didn't load. Please refresh and try again.");
+        }
+        var holder = document.getElementById("cardName");
+        return stripe.confirmCardPayment(intent.clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: holder && holder.value.trim() ? holder.value.trim() : order.customer.name,
+              email: order.customer.email
+            }
+          }
+        }).then(function (result) {
+          if (result.error) {
+            var declined = new Error(result.error.message || "Your card was declined.");
+            declined.cardError = true;
+            throw declined;
+          }
+          // The server's answer is the one that counts, not this result.
+          return postJson("/payments/verify", {
+            orderId: orderId,
+            paymentIntentId: result.paymentIntent.id
+          });
+        });
+      });
+  }
+  /* ---------- Payment method ---------- */
+
+  /*  The markup shipped with a card option, a panel of card fields and a
+      Stripe mount point — and nothing that ever looked at them. Cash on
+      Delivery carried `is-selected` hard-coded in the HTML, so it appeared
+      chosen permanently and Card could never appear chosen at all: clicking
+      it ticked the radio and changed nothing a shopper could see.          */
+
+  // $$ lives inside main.js's own closure and is not visible here; reaching
+  // for it threw at load and took the whole file down with it.
+  var pmRadios = [].slice.call(document.querySelectorAll('input[name="paymentMethod"]'));
+  var cardBox = document.getElementById("cardDetailsBox");
+  var pmNoteText = document.getElementById("pmNoteText");
+  var cardSimNote = document.getElementById("cardSimNote");
+  var cardSecureNote = document.getElementById("cardSecureNote");
+
+  var PM_NOTES = {
+    cod: "Payment is collected on delivery. Your details are used only to fulfil this order.",
+    card: "Card details go straight to Stripe and never reach NovaCart's servers."
+  };
+
+  /** Which method is chosen right now. */
+  function chosenMethod() {
+    for (var i = 0; i < pmRadios.length; i += 1) {
+      if (pmRadios[i].checked) { return pmRadios[i].value; }
+    }
+    return "cod";
+  }
+
+  /** Move the highlight, open or close the card panel, swap the note. */
+  function paintPaymentMethod() {
+    var method = chosenMethod();
+
+    pmRadios.forEach(function (radio) {
+      var label = radio.closest(".pm-card");
+      if (label) { label.classList.toggle("is-selected", radio.checked); }
+    });
+
+    if (cardBox) { cardBox.style.display = method === "card" ? "block" : "none"; }
+    if (pmNoteText) { pmNoteText.textContent = PM_NOTES[method] || PM_NOTES.cod; }
+
+    // Elements is mounted the first time the panel is actually opened. Doing
+    // it while the panel is display:none gives Stripe a zero-height box to
+    // measure and the field renders collapsed.
+    if (method === "card") { mountCardElement(); }
+  }
+
+  /* ---------- Stripe Elements ---------- */
+
+  var stripe = null;          // the Stripe.js handle, once configured
+  var cardElement = null;     // the mounted card field
+  var stripeReady = false;    // config has been fetched and understood
+  var simulationMode = false; // no keys configured; the server fakes payment
+
+  function stripeErrorEl() { return document.getElementById("stripeCardError"); }
+
+  function showCardError(message) {
+    var el = stripeErrorEl();
+    if (!el) { return; }
+    el.textContent = message || "";
+    var field = el.closest(".field");
+    if (field) { field.classList.toggle("is-invalid", !!message); }
+  }
+
+  /**
+   * Ask the server what it can do, then prepare the card field.
+   *
+   * The publishable key comes from the server rather than being written into
+   * the page, so the same build works against test and live keys without an
+   * edit here.
+   */
+  function initStripe() {
+    return fetch(apiBase() + "/payments/config", { credentials: "include" })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return {}; })
+      .then(function (config) {
+        simulationMode = !!config.simulation || !config.configured;
+        if (cardSimNote) { cardSimNote.hidden = !simulationMode; }
+        if (cardSecureNote) { cardSecureNote.hidden = simulationMode; }
+
+        // With no keys there is nothing to mount; the server's /simulate
+        // stands in and no card details are collected at all.
+        if (simulationMode || !config.publishableKey || typeof window.Stripe !== "function") {
+          var field = document.getElementById("stripeField");
+          if (field && simulationMode) { field.hidden = true; }
+          stripeReady = true;
+          return;
+        }
+
+        stripe = window.Stripe(config.publishableKey);
+        stripeReady = true;
+        if (chosenMethod() === "card") { mountCardElement(); }
+      });
+  }
+
+  /** Mount the card field once, the first time the panel is open. */
+  function mountCardElement() {
+    if (cardElement || !stripe) { return; }
+    var mount = document.getElementById("stripeCard");
+    if (!mount) { return; }
+
+    var elements = stripe.elements();
+    cardElement = elements.create("card", {
+      hidePostalCode: true,          // the form already asks for one
+      style: {
+        base: {
+          fontSize: "15px",
+          color: "#1E293B",
+          fontFamily: "Inter, system-ui, sans-serif",
+          "::placeholder": { color: "#94A3B8" }
+        },
+        invalid: { color: "#B91C1C", iconColor: "#B91C1C" }
+      }
+    });
+    cardElement.mount(mount);
+    cardElement.on("change", function (event) {
+      showCardError(event.error ? event.error.message : "");
+    });
+  }
   /* ---------- Init ---------- */
 
   document.addEventListener("DOMContentLoaded", function () {
     if (!form) { return; }
 
     placeBtn.disabled = true;   // until the catalog is in
+
+    pmRadios.forEach(function (radio) {
+      radio.addEventListener("change", paintPaymentMethod);
+    });
+    paintPaymentMethod();       // honour whatever is checked on load
+    initStripe();
 
     App.getProducts()
       .then(function (products) {
