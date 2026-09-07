@@ -91,23 +91,57 @@ async function start() {
 
   /* ---------- Graceful shutdown ---------- */
 
-  async function shutdown(signal) {
-    console.log(`\n${signal} received — shutting down…`);
-    server.close(async () => {
-      await disconnectDB();
-      process.exit(0);
+  // Shutting down is a one-way door. Without this flag the function could
+  // re-enter itself without bound: it handed server.close() an ASYNC callback
+  // whose promise nobody awaited, so a rejecting disconnectDB() surfaced as an
+  // unhandledRejection - and the unhandledRejection handler called shutdown(),
+  // which closed again, which rejected again. Measured at 200,000 re-entries
+  // in five seconds, with the escape timer unable to help: an unref'd timer
+  // never keeps the loop alive and never gets a turn while this spins.
+  let shuttingDown = false;
+
+  function shutdown(signal, code) {
+    if (shuttingDown) { return; }
+    shuttingDown = true;
+    // A blank line first, so the notice is not glued to the last log entry.
+    console.log("");
+    console.log(signal + " received - shutting down...");
+
+    // Armed BEFORE anything that can fail, and deliberately NOT unref'd: it is
+    // the only guarantee the process ever leaves, so it has to hold the event
+    // loop open long enough to fire.
+    const escape = setTimeout(function () {
+      console.error("Shutdown timed out - exiting anyway.");
+      process.exit(code === undefined ? 1 : code);
+    }, 10000);
+
+    server.close(function () {
+      // The callback stays synchronous. Its own failure is handled here
+      // rather than escaping as a rejection nobody is waiting for.
+      disconnectDB()
+        .catch(function (error) {
+          console.error("Database did not close cleanly:", error.message);
+        })
+        .then(function () {
+          clearTimeout(escape);
+          process.exit(code === undefined ? 0 : code);
+        });
     });
-    // Don't hang forever if a connection refuses to close.
-    setTimeout(() => process.exit(1), 10000).unref();
   }
 
   ["SIGINT", "SIGTERM"].forEach((signal) => {
     process.on(signal, () => shutdown(signal));
   });
 
-  process.on("unhandledRejection", (reason) => {
-    console.error("💥  Unhandled promise rejection:", reason);
-    shutdown("unhandledRejection");
+  // A crash exits non-zero, so a supervisor can tell it from a clean stop.
+  process.on("unhandledRejection", function (reason) {
+    console.error("Unhandled promise rejection:", reason);
+    shutdown("unhandledRejection", 1);
+  });
+
+  process.on("uncaughtException", function (error) {
+    console.error("Uncaught exception:", error);
+    shutdown("uncaughtException", 1);
   });
 }
 
