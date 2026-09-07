@@ -3296,8 +3296,8 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 
 /* Stock by colour, in the admin product drawer. One row per colour: its swatch,
-   its name, and its own count. The total underneath is calculated, never typed,
-   so it can never disagree with the boxes above it. */
+   its name, its picture, and its own count. The total underneath is calculated,
+   never typed, so it can never disagree with the boxes above it. */
 .vstock {
   display: grid;
   gap: 8px;
@@ -3308,63 +3308,93 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 .vstock__row {
   display: grid;
-  /* swatch · name · that colour's photo · its count */
-  grid-template-columns: 20px minmax(96px, 0.8fr) minmax(150px, 2fr) 84px;
+  /* open-on · swatch · name · picture control · count · remove.
+     The path input among them is hidden, so it takes no column. */
+  grid-template-columns: 18px 20px minmax(86px, 0.8fr) minmax(150px, 1.6fr) 70px 26px;
+  gap: 8px;
   align-items: center;
   gap: 10px;
 }
-.vstock__swatch {
-  width: 18px;
-  height: 18px;
+/* Scoped to the row on purpose: ".field input" is a class AND a type,
+   so it outranks a lone class and would put its own padding back -
+   which turned the round swatch into a 30x26 oval. */
+/* A colour picker wearing the old dot's clothes: same round 18px mark,
+   but a swatch saved wrongly can now be put right where it is shown. */
+.vstock__row .vstock__swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(15, 23, 42, .25);
+  cursor: pointer;
 }
-.vstock__label { font-size: .88rem; font-weight: 600; margin: 0; }
-.vstock__image {
+/* Chrome wraps the colour in its own padded box; Firefox uses the second. */
+.vstock__row .vstock__swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.vstock__row .vstock__swatch::-webkit-color-swatch { border: none; border-radius: 50%; }
+.vstock__row .vstock__swatch::-moz-color-swatch { border: none; border-radius: 50%; }
+.vstock__row .vstock__swatch:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 2px; }
+/* The name is editable in place: a colour saved under the wrong one could
+   otherwise only be fixed by removing it and starting again. */
+.vstock__row .vstock__name {
   width: 100%;
-  min-width: 0;                 /* let the column actually shrink */
-  padding: 7px 10px;
+  min-width: 0;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font: inherit;
-  font-size: .82rem;
+  font-size: .85rem;
+  font-weight: 600;
 }
-.vstock__image:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
-/* Which colour the catalogue card follows, said once where it matters. */
-.vstock__flag {
-  margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(79, 70, 229, .12);
-  color: var(--indigo-600);
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: .02em;
-  text-transform: uppercase;
+.vstock__row .vstock__name:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
+.vstock__row .vstock__default { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.vstock__remove {
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-soft, #64748b);
+  font-size: 1rem; line-height: 1;
+  cursor: pointer;
+  transition: background-color .16s var(--ease), color .16s var(--ease),
+              border-color .16s var(--ease);
+}
+.vstock__remove:hover { background: #FEE2E2; border-color: #FCA5A5; color: #B91C1C; }
+/* Struck through rather than gone: the row can be brought back until the
+   save, so a mis-click costs a click and not a colour. */
+.vstock__row.is-removing { opacity: .5; }
+.vstock__row.is-removing .vstock__name { text-decoration: line-through; }
+.vstock__row.is-removing .imgpick__thumb { filter: grayscale(1); }
+.vstock__row.is-removing .vstock__remove {
+  background: #DCFCE7; border-color: #86EFAC; color: #15803D;
 }
 .vstock__hint { display: block; margin-top: 3px; font-size: .78rem; }
 
 @media (max-width: 720px) {
   /* Four columns in a drawer on a phone is unusable; stack instead. */
   .vstock__row {
-    grid-template-columns: 20px 1fr 84px;
-    grid-template-areas: "swatch name stock" "img img img";
+    grid-template-columns: 18px 20px 1fr 70px 26px;
+    grid-template-areas: "open swatch name stock remove" "img img img img img";
     row-gap: 6px;
   }
+  .vstock__default { grid-area: open; }
   .vstock__swatch { grid-area: swatch; }
-  .vstock__label { grid-area: name; }
+  .vstock__name { grid-area: name; }
   .vstock__input { grid-area: stock; }
-  .vstock__image { grid-area: img; }
+  .vstock__remove { grid-area: remove; }
+  .vstock__row .imgpick { grid-area: img; }
 }
-.vstock__input {
+.vstock__row .vstock__input {
   width: 100%;
+  min-width: 0;                 /* a number box will not shrink on its own */
   padding: 7px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font: inherit;
   text-align: right;
 }
-.vstock__input:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
+.vstock__row .vstock__input:focus-visible { outline: 2px solid var(--indigo-600); outline-offset: 1px; }
 .vstock__total {
   margin: 4px 0 0;
   padding-top: 9px;
@@ -3375,12 +3405,13 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 .vstock__total strong { color: var(--slate-900, #0f172a); font-variant-numeric: tabular-nums; }
 
 /* Colour editor on the new-product drawer. One row per colour: swatch, name,
-   its own photograph, its own stock, and a way to take it back out again. */
+   its own picture, its own stock, and a way to take it back out again. */
 .cedit { display: grid; gap: 8px; margin-bottom: 10px; }
 .cedit:empty { margin-bottom: 0; }
 .cedit__row {
   display: grid;
-  grid-template-columns: 44px minmax(120px, 1fr) minmax(160px, 1.6fr) 84px 34px;
+  /* swatch · name · picture control · count · remove */
+  grid-template-columns: 44px minmax(110px, 1fr) minmax(186px, 1.6fr) 84px 34px;
   align-items: center;
   gap: 8px;
 }
@@ -3415,9 +3446,59 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   }
   .cedit__hex { grid-area: hex; }
   .cedit__label { grid-area: label; }
-  .cedit__image { grid-area: img; }
+  .cedit__row .imgpick { grid-area: img; }
   .cedit__stock { grid-area: stock; text-align: left; }
   .cedit__remove { grid-area: remove; }
+}
+
+/* The picture control: a thumbnail of what is set, and the button that
+   replaces it. The path itself is hidden - pictures come off the device
+   now, so there is nothing to type. */
+.imgpick {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;                 /* a grid cell that can actually shrink */
+  flex-wrap: wrap;
+}
+/* Standing on its own under a label, rather than sitting in a colour row. */
+.field > .imgpick { margin-top: 6px; }
+.imgpick__btn { white-space: nowrap; flex: none; }
+/* What is set at the moment - the reason the path no longer needs showing. */
+.imgpick__thumb {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+.imgpick__thumb--empty { border-style: dashed; }
+/* The row's own input rule is more specific than .visually-hidden and puts
+   padding back on the file input, leaving a 22x16 invisible box. It is out
+   of flow so it disturbs nothing, but it should still be the 1px it claims. */
+.imgpick .visually-hidden { padding: 0; border: 0; }
+/* The path input is hidden, so it cannot carry the red border a refused
+   field usually gets. The picture it stands for carries it instead. */
+.field.is-invalid .imgpick__thumb,
+.vstock__row.is-invalid .imgpick__thumb,
+.cedit__row.is-invalid .imgpick__thumb { border-color: #DC2626; }
+.imgpick__note {
+  font-size: .78rem;
+  color: var(--text-soft, #64748b);
+  min-width: 0;
+}
+/* Off-screen but still reachable by a click() and by assistive tech. */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .account__item--admin { color: var(--indigo-600); font-weight: 650; }

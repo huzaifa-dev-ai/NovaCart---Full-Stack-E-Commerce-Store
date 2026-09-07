@@ -17,6 +17,8 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Return = require("../models/Return");
 const ApiError = require("../utils/ApiError");
+const path = require("path");
+const fsp = require("fs").promises;
 
 /* ---------- GET /api/admin/stats ---------- */
 
@@ -324,12 +326,57 @@ function slugifyLabel(label) {
  */
 function badImagePath(value) {
   const path = String(value || "").trim();
-  if (!path) { return "An image path is required."; }
+  // The wording speaks to the dashboard, where pictures are chosen with a
+  // button. The test itself is unchanged: it is what stands between a
+  // hand-made request and a path pointing anywhere it likes.
+  if (!path) { return "Choose a picture."; }
   if (!/^assets\/[A-Za-z0-9 ()._\/-]+$/.test(path)) {
-    return "Use a path inside assets/, for example assets/images/products/framed/name.jpg";
+    return "A picture must be one of the store's own files, kept under assets/.";
   }
   if (path.includes("..")) { return "An image path cannot step outside assets/."; }
   return null;
+}
+
+/**
+ * The checks a colour must pass, wherever it arrives from: the form for a new
+ * product, or a colour added to one that already exists. Complaints are handed
+ * to `at`, so each caller answers for its own field name.
+ */
+function readColorRow(row, at) {
+  const label = String((row && row.label) || "").trim();
+  const swatchHex = String((row && row.swatchHex) || "").trim();
+  const image = String((row && row.image) || "").trim();
+  const count = Number(row && row.stockCount);
+
+  if (!label) { at("Give this colour a name."); }
+  if (label.length > 40) { at("A colour name must be 40 characters or fewer."); }
+  if (!/^#[0-9a-f]{6}$/i.test(swatchHex)) { at(`"${label || "This colour"}" needs a swatch like #1E293B.`); }
+  const imageProblem = badImagePath(image);
+  if (imageProblem) { at(`${label || "This colour"}: ${imageProblem}`); }
+  if (!Number.isInteger(count) || count < 0 || count > 100000) {
+    at(`Stock for ${label || "this colour"} must be a whole number of 0 or more.`);
+  }
+
+  return {
+    label, swatchHex, image, gallery: [],
+    stockCount: Number.isInteger(count) && count >= 0 ? count : 0,
+    inStock: Number.isInteger(count) && count > 0
+  };
+}
+
+/**
+ * An id derived from the colour's name that nothing has claimed yet. `taken`
+ * carries the ids already spoken for - which, for a colour being added to a
+ * product, means the ones already on that product, not merely the others in
+ * the same batch. Two colours sharing an id would be sold as one.
+ */
+function uniqueColorId(label, taken, position) {
+  const base = slugifyLabel(label);
+  let id = base || `color-${position}`;
+  let n = 2;
+  while (taken.has(id)) { id = `${base || "color"}-${n}`; n += 1; }
+  taken.add(id);
+  return id;
 }
 
 function buildColorVariants(raw) {
@@ -343,31 +390,9 @@ function buildColorVariants(raw) {
   const seen = new Set();
   const colors = raw.slice(0, MAX_COLORS).map((row, i) => {
     const at = (msg) => errors.push({ field: `colors.${i}`, message: msg });
-    const label = String((row && row.label) || "").trim();
-    const swatchHex = String((row && row.swatchHex) || "").trim();
-    const image = String((row && row.image) || "").trim();
-    const count = Number(row && row.stockCount);
-
-    if (!label) { at("Give this colour a name."); }
-    if (label.length > 40) { at("A colour name must be 40 characters or fewer."); }
-    if (!/^#[0-9a-f]{6}$/i.test(swatchHex)) { at(`"${label || "This colour"}" needs a swatch like #1E293B.`); }
-    const imageProblem = badImagePath(image);
-    if (imageProblem) { at(`${label || "This colour"}: ${imageProblem}`); }
-    if (!Number.isInteger(count) || count < 0 || count > 100000) {
-      at(`Stock for ${label || "this colour"} must be a whole number of 0 or more.`);
-    }
-
-    // Two colours can be named alike by accident; the ids still have to differ.
-    let id = slugifyLabel(label) || `color-${i + 1}`;
-    let n = 2;
-    while (seen.has(id)) { id = `${slugifyLabel(label) || "color"}-${n}`; n += 1; }
-    seen.add(id);
-
-    return {
-      id, label, swatchHex, image, gallery: [],
-      stockCount: Number.isInteger(count) && count >= 0 ? count : 0,
-      inStock: Number.isInteger(count) && count > 0
-    };
+    const colour = readColorRow(row, at);
+    colour.id = uniqueColorId(colour.label, seen, i + 1);
+    return colour;
   });
 
   if (errors.length) {
@@ -435,6 +460,205 @@ function applyVariantStock(product, variantStock) {
  * one moves the card with it. Leaving them to diverge is how a product ends
  * up advertised in a colour it no longer opens on.
  */
+/**
+ * Colours added to a product that already exists.
+ *
+ * This is deliberately a different door from `colors`, which a PATCH never
+ * honours: that omission is what stops the stock-and-picture form from
+ * rewriting an existing colour's name, swatch or photograph. This one may
+ * only APPEND, so that guarantee is untouched - nothing already on the
+ * product is read, moved or overwritten here.
+ */
+/**
+ * The swatch shown beside a colour's name, per colour:
+ * `variantSwatches: { "<colorId>": "#1E293B" }`.
+ *
+ * A swatch is decoration and nothing else - it names no file and moves no
+ * stock - so it gets its own narrow door rather than reopening `colors`,
+ * which a PATCH still never honours. Name, picture and id stay out of reach.
+ */
+function applyVariantSwatches(product, variantSwatches) {
+  const colors = product.colors || [];
+  const errors = [];
+
+  Object.keys(variantSwatches).forEach((colorId) => {
+    const colour = colors.find((c) => c.id === colorId);
+    if (!colour) {
+      errors.push({ field: `variantSwatches.${colorId}`,
+        message: `This product has no colour called "${colorId}".` });
+      return;
+    }
+    const next = String(variantSwatches[colorId] || "").trim();
+    if (!/^#[0-9a-f]{6}$/i.test(next)) {
+      errors.push({ field: `variantSwatches.${colorId}`,
+        message: `${colour.label} needs a swatch like #1E293B.` });
+      return;
+    }
+    colour.swatchHex = next;
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+}
+
+/**
+ * Renaming colours already on the product:
+ * `variantLabels: { "<colorId>": "Ivory" }`.
+ *
+ * The id deliberately does NOT follow the name. Carts, open orders and past
+ * receipts all point at the id; regenerating it from the new name would
+ * quietly orphan every one of them. The id is plumbing, the label is what
+ * the shopper reads, and only the label changes here.
+ */
+function applyVariantLabels(product, variantLabels) {
+  const colors = product.colors || [];
+  const errors = [];
+
+  Object.keys(variantLabels).forEach((colorId) => {
+    const colour = colors.find((c) => c.id === colorId);
+    if (!colour) {
+      errors.push({ field: `variantLabels.${colorId}`,
+        message: `This product has no colour called "${colorId}".` });
+      return;
+    }
+    const next = String(variantLabels[colorId] || "").trim();
+    if (!next) {
+      errors.push({ field: `variantLabels.${colorId}`, message: "Give this colour a name." });
+      return;
+    }
+    if (next.length > 40) {
+      errors.push({ field: `variantLabels.${colorId}`,
+        message: "A colour name must be 40 characters or fewer." });
+      return;
+    }
+    colour.label = next;
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+}
+
+/**
+ * Taking colours off a product: `removeColors: ["<colorId>", ...]`.
+ *
+ * At least one must survive. A product with no colours keeps its stock in a
+ * single number instead, and emptying the list here would silently throw that
+ * number away along with the counts - so the last one is refused rather than
+ * quietly reinterpreted.
+ */
+function removeColorVariants(product, raw) {
+  if (!Array.isArray(raw) || !raw.length) { return; }
+
+  const colors = product.colors || [];
+  const wanted = raw.map((x) => String(x || "").trim()).filter(Boolean);
+  const errors = [];
+
+  wanted.forEach((colorId) => {
+    if (!colors.some((c) => c.id === colorId)) {
+      errors.push({ field: `removeColors.${colorId}`,
+        message: `This product has no colour called "${colorId}".` });
+    }
+  });
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+
+  const doomed = new Set(wanted);
+  const survivors = colors.filter((c) => !doomed.has(c.id));
+  if (!survivors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", [{
+      field: "removeColors",
+      message: "Keep at least one colour. A product cannot be left with none."
+    }]);
+  }
+
+  product.colors = survivors;
+}
+
+/**
+ * Which colour the product opens on, and whose photograph the catalogue card
+ * carries: `defaultColorId: "<colorId>"`. Read after colours have been added
+ * and removed, so it can name one that has only just arrived.
+ */
+function applyDefaultColor(product, wanted) {
+  const colors = product.colors || [];
+  const next = String(wanted || "").trim();
+  if (!next) { return; }
+
+  if (!colors.some((c) => c.id === next)) {
+    throw ApiError.validation("Please check the highlighted fields.", [{
+      field: "defaultColorId",
+      message: `This product has no colour called "${next}".`
+    }]);
+  }
+  product.defaultColorId = next;
+}
+
+/**
+ * The last word on a product's colours, run once after every change to them.
+ *
+ * Three things have to agree and are easy to leave disagreeing: the total is
+ * the sum of the counts, the default names a colour that exists, and the card
+ * carries that colour's photograph. Settling them in one place means no
+ * caller has to remember to.
+ */
+function settleColorState(product) {
+  const colors = product.colors || [];
+  if (!colors.length) {
+    product.defaultColorId = null;
+    return;
+  }
+
+  if (!colors.some((c) => c.id === product.defaultColorId)) {
+    product.defaultColorId = colors[0].id;
+  }
+  const shown = colors.find((c) => c.id === product.defaultColorId);
+  if (shown && shown.image) { product.image = shown.image; }
+
+  product.stock = colors.reduce((sum, c) => sum + (Number(c.stockCount) || 0), 0);
+  colors.forEach((c) => { c.inStock = (Number(c.stockCount) || 0) > 0; });
+}
+
+function appendColorVariants(product, raw) {
+  if (!Array.isArray(raw) || !raw.length) { return; }
+
+  const existing = product.colors || [];
+  if (existing.length + raw.length > MAX_COLORS) {
+    throw ApiError.validation("Please check the highlighted fields.", [{
+      field: "addColors",
+      message: `A product can hold at most ${MAX_COLORS} colours, and this one already has ` +
+        `${existing.length}. There is room for ${Math.max(0, MAX_COLORS - existing.length)} more.`
+    }]);
+  }
+
+  const errors = [];
+  const taken = new Set(existing.map((c) => c.id));
+  const added = raw.map((row, i) => {
+    const at = (msg) => errors.push({ field: `addColors.${i}`, message: msg });
+    const colour = readColorRow(row, at);
+    colour.id = uniqueColorId(colour.label, taken, existing.length + i + 1);
+    return colour;
+  });
+
+  if (errors.length) {
+    throw ApiError.validation("Please check the highlighted fields.", errors);
+  }
+
+  added.forEach((colour) => { product.colors.push(colour); });
+
+  // Once a product has colours at all, the parts are the truth: the total is
+  // what the counts add up to, never a number carried separately.
+  product.stock = product.colors.reduce((sum, c) => sum + (Number(c.stockCount) || 0), 0);
+
+  // A product that had no colours until now needs one to open on, and the
+  // card follows it, exactly as it does everywhere else.
+  if (!product.defaultColorId) { product.defaultColorId = product.colors[0].id; }
+  const shown = product.colors.find((c) => c.id === product.defaultColorId) || product.colors[0];
+  if (shown) { product.image = shown.image; }
+}
+
 function applyVariantImages(product, variantImages) {
   const colors = product.colors || [];
   const errors = [];
@@ -453,6 +677,19 @@ function applyVariantImages(product, variantImages) {
       return;
     }
     colour.image = next;
+  });
+
+  // A colour left in the catalogue without a picture cannot be saved: the
+  // model requires one. Mongoose would refuse it in words meant for a
+  // developer, pinned to the product rather than the colour at fault. Say
+  // which colour instead, while the remedy is one button away.
+  const reported = new Set(errors.map((e) => e.field));
+  colors.forEach((colour) => {
+    const field = `variantImages.${colour.id}`;
+    if (reported.has(field)) { return; }
+    if (!String(colour.image || "").trim()) {
+      errors.push({ field, message: `${colour.label}: choose a picture for this colour.` });
+    }
   });
 
   if (errors.length) {
@@ -492,6 +729,92 @@ function assertSalePriceMakesSense(product, body) {
   throw ApiError.validation("Please check the highlighted fields.", [{ field, message }]);
 }
 
+/* ---------- POST /api/admin/products/image ---------- */
+
+const IMAGE_DIR = path.join(__dirname, "..", "..", "public", "assets", "images", "products", "framed");
+const THUMB_DIR = path.join(IMAGE_DIR, "thumb");
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Accept a product photograph that the dashboard has already squared and
+ * resized, and file it where the storefront expects.
+ *
+ * The framing happens in the browser on a canvas rather than here, which
+ * keeps a native image library out of the dependency list - this project has
+ * no build step and installs with nothing but npm install. What arrives is
+ * therefore already the exact two sizes the shop serves.
+ *
+ * Nothing that arrives is trusted. The bytes are re-checked for a JPEG
+ * signature, the sizes are capped, and the FILENAME is rebuilt from scratch
+ * rather than sanitised - a name is only ever letters, digits and hyphens
+ * here, so there is no traversal to strip and no extension to argue about.
+ */
+function safeImageName(raw) {
+  const base = String(raw || "")
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/, "")      // drop whatever extension came with it
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return base || "product-image";
+}
+
+/** Decode a data: URL we produced ourselves, refusing anything else. */
+function decodeJpegDataUrl(value, label) {
+  const prefix = "data:image/jpeg;base64,";
+  const text = String(value || "");
+  if (!text.startsWith(prefix)) {
+    throw ApiError.validation("Please check the highlighted fields.",
+      [{ field: "image", message: `The ${label} image was not in the expected format.` }]);
+  }
+  const bytes = Buffer.from(text.slice(prefix.length), "base64");
+  if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) {
+    throw ApiError.validation("Please check the highlighted fields.",
+      [{ field: "image", message: `The ${label} image is empty or too large.` }]);
+  }
+  // A JPEG starts FF D8 FF and ends FF D9. Cheap, and it means a renamed
+  // script cannot be filed away as a picture.
+  if (bytes[0] !== 0xFF || bytes[1] !== 0xD8 || bytes[2] !== 0xFF) {
+    throw ApiError.validation("Please check the highlighted fields.",
+      [{ field: "image", message: `The ${label} image is not a JPEG.` }]);
+  }
+  return bytes;
+}
+
+async function uploadProductImage(req, res, next) {
+  try {
+    const body = req.body || {};
+    const full = decodeJpegDataUrl(body.full, "full-size");
+    const thumb = decodeJpegDataUrl(body.thumb, "thumbnail");
+
+    await fsp.mkdir(THUMB_DIR, { recursive: true });
+
+    // Never overwrite a picture another product might be using: settle on a
+    // free name instead of destroying one.
+    const wanted = safeImageName(body.name);
+    let name = `${wanted}.jpg`;
+    for (let n = 2; n < 500; n += 1) {
+      try {
+        await fsp.access(path.join(IMAGE_DIR, name));
+        name = `${wanted}-${n}.jpg`;
+      } catch (missing) {
+        break;                       // this one is free
+      }
+    }
+
+    await fsp.writeFile(path.join(IMAGE_DIR, name), full);
+    await fsp.writeFile(path.join(THUMB_DIR, name), thumb);
+
+    res.status(201).json({
+      success: true,
+      path: `assets/images/products/framed/${name}`,
+      bytes: full.length,
+      thumbBytes: thumb.length
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 /* ---------- PATCH /api/admin/products/:id ---------- */
 
 async function updateProduct(req, res, next) {
@@ -535,6 +858,36 @@ async function updateProduct(req, res, next) {
     if (req.body.variantImages && typeof req.body.variantImages === "object") {
       applyVariantImages(product, req.body.variantImages);
     }
+
+    if (req.body.variantSwatches && typeof req.body.variantSwatches === "object") {
+      applyVariantSwatches(product, req.body.variantSwatches);
+    }
+
+    if (req.body.variantLabels && typeof req.body.variantLabels === "object") {
+      applyVariantLabels(product, req.body.variantLabels);
+    }
+
+    // Removals run before additions, so a colour can be taken off and another
+    // put on in the same save without the pair briefly breaching the ceiling.
+    if ("removeColors" in req.body) {
+      removeColorVariants(product, req.body.removeColors);
+    }
+
+    // Colours added to a product that already has some. After the stock work
+    // above, so the recomputed total takes in both the counts just set on the
+    // existing colours and the ones arriving with the new.
+    if ("addColors" in req.body) {
+      appendColorVariants(product, req.body.addColors);
+    }
+
+    // Last, so it may name a colour that arrived in this very request.
+    if ("defaultColorId" in req.body) {
+      applyDefaultColor(product, req.body.defaultColorId);
+    }
+
+    // One place where the total, the default and the card picture are made to
+    // agree, whichever of the above ran.
+    settleColorState(product);
 
     if ("image" in req.body) {
       const problem = badImagePath(req.body.image);
@@ -594,5 +947,6 @@ module.exports = {
   deleteUser,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  uploadProductImage
 };

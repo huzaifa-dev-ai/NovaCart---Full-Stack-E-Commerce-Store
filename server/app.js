@@ -7,6 +7,7 @@
    ============================================================= */
 
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -50,7 +51,10 @@ app.use(
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         // Google profile photos are served from googleusercontent.com. Scoped
         // to that host rather than opening img-src to the web.
-        imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
+        // "blob:" lets the admin picker draw a chosen file into a canvas
+        // before upload. A blob URL can only be minted by this page's own
+        // script and is same-origin, so it widens nothing an attacker reaches.
+        imgSrc: ["'self'", "data:", "blob:", "https://*.googleusercontent.com"],
         // 'unsafe-inline' is needed for the inline onerror image fallbacks in
         // the markup. Removing those attributes would let this be tightened.
         scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
@@ -75,6 +79,12 @@ app.use(
     credentials: true      // required for the auth cookie to travel
   })
 );
+// A product photo arrives as base64 inside a JSON body, so this one admin
+// route needs more room than the 100kb the rest of the API gets. It is
+// mounted BEFORE the global parser on purpose: body-parser marks the body as
+// read, so the 100kb parser below skips it. Mounted after, the global limit
+// would reject the upload before the route ever saw it.
+app.use("/api/admin/products/image", express.json({ limit: "6mb" }));
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
@@ -126,6 +136,41 @@ app.use("/api/admin", require("./routes/admin"));
 // directory is safer than trying to deny paths one at a time.
 const FRONTEND_DIR = path.join(__dirname, "..", "public");
 
+/*  Card thumbnails, with the full-size image as a standing fallback.
+
+    Product cards ship a srcset naming a 550px copy under framed/thumb/ and
+    the full-size original. That copy is generated in bulk, so any picture an
+    admin points a colour at afterwards has no thumbnail - and because the
+    browser prefers the small candidate for a card-sized slot, it asks for a
+    file that is not there and the card renders broken. The product page,
+    which uses the full-size path directly, looks fine, which makes it a
+    confusing thing to be told about.
+
+    Rather than ask whoever edits a product to remember to generate a
+    thumbnail, the missing one resolves to the full-size image here. The card
+    then costs more bytes than it should until a thumbnail is generated, but
+    it is never broken. Correctness first, weight second.                    */
+const THUMB_PREFIX = "/assets/images/products/framed/thumb/";
+
+app.use(THUMB_PREFIX, (req, res, next) => {
+  // req.path is already URL-decoded by Express.
+  const name = path.basename(req.path);
+  // basename() strips any traversal, and this refuses anything that still
+  // looks like one rather than trusting that.
+  if (!name || name.includes("..") || name !== req.path.replace(/^\//, "")) {
+    return next();
+  }
+
+  const thumb = path.join(FRONTEND_DIR, "assets/images/products/framed/thumb", name);
+  fs.access(thumb, fs.constants.R_OK, (missing) => {
+    if (!missing) { return next(); }        // the real thumbnail exists
+    const full = path.join(FRONTEND_DIR, "assets/images/products/framed", name);
+    fs.access(full, fs.constants.R_OK, (alsoMissing) => {
+      if (alsoMissing) { return next(); }   // neither exists: a genuine 404
+      res.sendFile(full);
+    });
+  });
+});
 app.use(
   express.static(FRONTEND_DIR, {
     extensions: ["html"],          // /products  ->  products.html

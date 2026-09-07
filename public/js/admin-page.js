@@ -115,7 +115,10 @@
     drawer.classList.add("is-open");
     document.body.style.overflow = "hidden";
 
-    var focusable = drawer.querySelector("input, select, textarea, button:not([data-close])");
+    // Hidden inputs match a bare "input" and cannot take focus, which would
+    // make this a silent no-op if one ever came first in the form.
+    var focusable = drawer.querySelector(
+      "input:not([type=hidden]), select, textarea, button:not([data-close])");
     if (focusable) { focusable.focus(); }
   }
 
@@ -296,20 +299,35 @@
 
     var rows = colors.map(function (c) {
       var isDefault = c.id === product.defaultColorId;
-      return '<div class="vstock__row">' +
-        '<span class="vstock__swatch" style="background:' + esc(c.swatchHex || "#64748b") + '"' +
-          ' aria-hidden="true"></span>' +
-        '<label class="vstock__label" for="vstock-' + esc(c.id) + '">' + esc(c.label) +
-          (isDefault ? ' <span class="vstock__flag">default</span>' : "") + "</label>" +
-        '<input class="vstock__image" type="text" spellcheck="false"' +
+      return '<div class="vstock__row" data-existing-color="' + esc(c.id) + '">' +
+        // Which colour the product opens on, and whose photograph the card
+        // carries. One choice across the whole group, so a radio.
+        '<input class="vstock__default" type="radio" name="defaultColour"' +
+          ' id="vdefault-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Open on ' + esc(c.label) + '"' +
+          ' title="Show this colour first"' + (isDefault ? " checked" : "") + " />" +
+        // A picker rather than a dot: a colour saved with the wrong swatch
+        // could otherwise never be put right from here.
+        '<input class="vstock__swatch" type="color"' +
+          ' id="vswatch-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Swatch colour for ' + esc(c.label) + '"' +
+          ' value="' + esc(hexOrDefault(c.swatchHex)) + '" />' +
+        '<input class="vstock__name" type="text" maxlength="40" spellcheck="false"' +
+          ' id="vlabel-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Name of this colour"' +
+          ' value="' + esc(c.label) + '" />' +
+        // The path is kept but no longer shown: pictures are chosen from
+        // the device now, so nobody need know where the files are filed.
+        '<input class="vstock__image" type="hidden"' +
           ' id="vimage-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
-          ' aria-label="Photo for ' + esc(c.label) + '"' +
-          ' placeholder="assets/images/products/framed/…"' +
+          ' data-picker-for="' + esc(c.label) + '"' +
           ' value="' + esc(c.image || "") + '" />' +
         '<input class="vstock__input" type="number" min="0" step="1" inputmode="numeric"' +
           ' id="vstock-' + esc(c.id) + '" data-color-id="' + esc(c.id) + '"' +
           ' aria-label="Stock for ' + esc(c.label) + '"' +
           ' value="' + (Number(c.stockCount) || 0) + '" />' +
+        '<button type="button" class="vstock__remove" data-color-id="' + esc(c.id) + '"' +
+          ' aria-label="Remove ' + esc(c.label) + '" title="Remove this colour">&times;</button>' +
       "</div>";
     }).join("");
 
@@ -322,18 +340,55 @@
       '<span class="field-error"></span></div>';
   }
 
-  /** Keep the displayed total honest as the individual boxes are typed in. */
-  function wireStockTotal() {
+  /**
+   * Taking a colour off, reversibly. The row stays on screen struck through
+   * until the save, so a mis-click costs one more click rather than a colour;
+   * and a row on its way out must not also be the one the product opens on.
+   */
+  function wireColorRemoval() {
+    var host = document.querySelector(".vstock");
+    if (!host) { return; }
+
+    host.addEventListener("click", function (event) {
+      var button = event.target.closest(".vstock__remove");
+      if (!button) { return; }
+      var row = button.closest(".vstock__row");
+      var going = row.classList.toggle("is-removing");
+
+      // Nothing in a row that is leaving should still be editable, and a
+      // struck-through row must not hold the default.
+      [].slice.call(row.querySelectorAll("input")).forEach(function (el) {
+        el.disabled = going;
+      });
+      button.setAttribute("aria-label",
+        (going ? "Keep " : "Remove ") + row.querySelector(".vstock__name").value);
+      button.innerHTML = going ? "&#8624;" : "&times;";
+
+      if (going && row.querySelector(".vstock__default").checked) {
+        var stays = [].slice.call(document.querySelectorAll(".vstock__row"))
+          .filter(function (r) { return !r.classList.contains("is-removing"); })[0];
+        if (stays) { stays.querySelector(".vstock__default").checked = true; }
+      }
+      recountStock();
+    });
+  }
+
+  /** The total under the rows, counting only the colours that will survive. */
+  function recountStock() {
     var out = document.getElementById("pStockTotal");
     if (!out) { return; }
-    var inputs = [].slice.call(document.querySelectorAll(".vstock__input"));
-    var recount = function () {
-      out.textContent = inputs.reduce(function (sum, el) {
-        var n = parseInt(el.value, 10);
+    out.textContent = [].slice.call(document.querySelectorAll(".vstock__row"))
+      .filter(function (row) { return !row.classList.contains("is-removing"); })
+      .reduce(function (sum, row) {
+        var n = parseInt(row.querySelector(".vstock__input").value, 10);
         return sum + (isNaN(n) || n < 0 ? 0 : n);
       }, 0);
-    };
-    inputs.forEach(function (el) { el.addEventListener("input", recount); });
+  }
+
+  /** Keep the displayed total honest as the individual boxes are typed in. */
+  function wireStockTotal() {
+    [].slice.call(document.querySelectorAll(".vstock__input"))
+      .forEach(function (el) { el.addEventListener("input", recountStock); });
   }
   /**
    * The colour editor, offered when creating a product.
@@ -346,10 +401,28 @@
    * the default swatch have to show the same photograph, so it is taken from
    * the first colour rather than typed twice and left to drift.
    */
-  function colorEditor() {
+  /**
+   * The same editor serves both drawers, in two modes. On a new product it IS
+   * the product's colours. On one that already exists it only ADDS: what is
+   * already on file is shown above and never passes through here, which is
+   * what keeps a colour's name and photograph out of this form's reach.
+   */
+  function colorEditor(existing) {
+    var adding = !!existing;
+    var colours = (existing && existing.colors) || [];
+    var note = adding
+      ? "(optional — what is already there is left as it is)"
+      : "(optional — leave empty for a single-image product)";
     return '<div class="field field--wide">' +
-      '<label>Colours <span style="color:#94A3B8">(optional — leave empty for a single-image product)</span></label>' +
-      '<div class="cedit" id="colorRows"></div>' +
+      "<label>" + (adding ? "Add a colour" : "Colours") +
+        ' <span style="color:#94A3B8">' + note + "</span></label>" +
+      '<div class="cedit" id="colorRows" data-color-mode="' + (adding ? "add" : "new") + '"' +
+        // A product with no colours until now already carries a number in
+        // stock. Offer it to the first colour added, so that count is carried
+        // across rather than quietly dropped.
+        (adding && !colours.length
+          ? ' data-seed-stock="' + (Number(existing.stock) || 0) + '"' : "") +
+      "></div>" +
       '<button type="button" class="btn btn--outline btn--sm" id="addColorRow">+ Add a colour</button>' +
       '<span class="field-error"></span></div>';
   }
@@ -360,12 +433,31 @@
       '<input type="color" class="cedit__hex" value="#1E293B" aria-label="Swatch colour" />' +
       '<input type="text" class="cedit__label" placeholder="Colour name, e.g. Onyx Black"' +
         ' aria-label="Colour name" />' +
-      '<input type="text" class="cedit__image" placeholder="assets/images/products/framed/…"' +
-        ' aria-label="Photo for this colour" />' +
+      '<input type="hidden" class="cedit__image" data-picker-for="this colour" />' +
       '<input type="number" class="cedit__stock" min="0" step="1" value="0"' +
         ' aria-label="Stock for this colour" />' +
       '<button type="button" class="cedit__remove" aria-label="Remove this colour">&times;</button>' +
     "</div>";
+  }
+
+  /**
+   * Follow the name with the swatch, until the shopkeeper picks one. Touching
+   * the picker is taken to mean "I want this one", and the row stops guessing
+   * from then on - a deliberate choice is never written over.
+   */
+  function wireSwatchFromName(row) {
+    var name = row.querySelector(".cedit__label");
+    var hex = row.querySelector(".cedit__hex");
+    if (!name || !hex) { return; }
+
+    hex.addEventListener("input", function () { row.dataset.hexChosen = "1"; });
+    hex.addEventListener("change", function () { row.dataset.hexChosen = "1"; });
+
+    name.addEventListener("input", function () {
+      if (row.dataset.hexChosen) { return; }
+      var suggested = swatchForName(name.value);
+      if (suggested) { hex.value = suggested; }
+    });
   }
 
   /** Add/remove wiring for the colour rows. */
@@ -377,6 +469,17 @@
     add.addEventListener("click", function () {
       rows.insertAdjacentHTML("beforeend", colorRowHtml());
       var last = rows.lastElementChild;
+      // Only the first colour on a product that had none inherits its count,
+      // and only once - the rest start at zero, as an empty row should.
+      var seed = rows.getAttribute("data-seed-stock");
+      if (seed && rows.querySelectorAll("[data-color-row]").length === 1) {
+        last.querySelector(".cedit__stock").value = seed;
+        rows.removeAttribute("data-seed-stock");
+      }
+      // A row added after the drawer opened missed the pass that gives every
+      // image field its button, so give this one its own.
+      attachImagePicker(last.querySelector(".cedit__image"));
+      wireSwatchFromName(last);
       var name = last.querySelector(".cedit__label");
       if (name) { name.focus(); }   // land where they are about to type
     });
@@ -400,6 +503,284 @@
       };
     });
   }
+  /* ---------- Framing a picture in the browser ---------- */
+
+  /*  Every photograph in the shop is a 1100px square, and every card is
+      served a 550px copy of it. A picture dropped in at whatever size and
+      shape it happened to be therefore jumps in the grid and costs far more
+      bytes than the slot it fills - a 1.9MB PNG where a framed JPEG is 200KB.
+
+      So the framing happens here, on a canvas, before anything is uploaded.
+      Doing it in the browser keeps a native image library out of the server's
+      dependencies: this project installs with nothing but npm install and has
+      no build step, and that is worth keeping.                              */
+
+  /* ------------------------------------------------------------------ *
+   * Reading a swatch out of a colour's name.
+   *
+   * A shopkeeper types "Sleek Gray" and expects a grey dot. Left alone the
+   * picker keeps whatever it opened on, so two differently named colours end
+   * up wearing the same swatch - which is what the shopper sees.
+   * ------------------------------------------------------------------ */
+
+  var COLOR_WORDS = {
+    // neutrals
+    black: "#111827", jet: "#1C1C1C", onyx: "#0B1120", obsidian: "#0F172A",
+    charcoal: "#36454F", graphite: "#3F4650", slate: "#475569", gunmetal: "#2A3439",
+    grey: "#808080", gray: "#808080", ash: "#B2BEB5", smoke: "#8A8F98",
+    silver: "#C0C0C0", platinum: "#E5E4E2", steel: "#8C9BA5", titanium: "#A6A9AA",
+    pearl: "#EAE7DC", ivory: "#FFFFF0", cream: "#FFFDD0", linen: "#FAF0E6",
+    snow: "#FBFDFF", frost: "#E8F1F5", white: "#F8FAFC",
+    // browns and sands
+    brown: "#8B5A2B", chocolate: "#5C3A21", espresso: "#3B2C25", mocha: "#7B5E48",
+    coffee: "#6F4E37", caramel: "#C88141", bronze: "#CD7F32", copper: "#B87333",
+    rust: "#B7410E", clay: "#B66A50", tan: "#D2B48C", taupe: "#B2A48E",
+    beige: "#F0E4D0", sand: "#E2CA9A", oat: "#DCD0BA", khaki: "#BDB183",
+    stone: "#C8C2B6", nude: "#E7C9A9",
+    // reds, pinks
+    red: "#DC2626", crimson: "#B91C3C", scarlet: "#D62828", ruby: "#9B111E",
+    cherry: "#C41E3A", wine: "#722F37", burgundy: "#6B1F2E", maroon: "#7F1D1D",
+    rose: "#E11D6F", pink: "#EC4899", blush: "#E8A0A8", coral: "#FB7185",
+    salmon: "#FA8072", peach: "#FFB07C", apricot: "#F3A25B",
+    // oranges, yellows
+    orange: "#F97316", amber: "#F59E0B", tangerine: "#F2811D", honey: "#E8A33D",
+    mustard: "#D4A017", gold: "#D4AF37", brass: "#C6A664", yellow: "#EAB308",
+    lemon: "#F4E04D", butter: "#F3E5AB",
+    // greens
+    green: "#16A34A", emerald: "#059669", jade: "#00A86B", forest: "#166534",
+    pine: "#01796F", fern: "#4F7942", moss: "#6A7B53", sage: "#9CAF88",
+    olive: "#6B7A2F", lime: "#84CC16", mint: "#A8E6CF",
+    // blues, teals
+    blue: "#2563EB", navy: "#1E3A8A", midnight: "#141E46", cobalt: "#0047AB",
+    royal: "#1D4ED8", sapphire: "#0F52BA", azure: "#3A8DDE", sky: "#38BDF8",
+    arctic: "#DCEBF3", ice: "#DDF0F7", denim: "#3B5B84", ocean: "#166D8C",
+    teal: "#0D9488", turquoise: "#40E0D0", aqua: "#22D3EE", cyan: "#06B6D4",
+    // purples
+    purple: "#7E22CE", violet: "#7C3AED", indigo: "#4F46E5", plum: "#6B2D5C",
+    lavender: "#C4B5FD", lilac: "#C8A2C8", mauve: "#B784A7", magenta: "#C026D3",
+    fuchsia: "#D946EF",
+    // times of day, used as shades
+    dusk: "#4B4E6D", sunset: "#EE6C4D", sunrise: "#F6A26B", dawn: "#E7D3C4",
+    storm: "#6B7280", shadow: "#374151"
+  };
+
+  /* The plain families. Product colours are nearly always "shade + family" -
+     Cobalt Blue, Midnight Blue - and it is the shade that distinguishes them,
+     so a shade always beats the family standing beside it. Reading the last
+     word instead would paint both of those the same blue. */
+  var GENERIC_WORDS = {
+    black: 1, white: 1, grey: 1, gray: 1, blue: 1, green: 1, red: 1,
+    yellow: 1, orange: 1, purple: 1, pink: 1, brown: 1, silver: 1,
+    gold: 1, beige: 1, tan: 1
+  };
+
+  /* Pairs that mean something other than the sum of their words. */
+  var COLOR_PHRASES = {
+    "rose gold": "#B76E79", "off white": "#FAF9F6", "gun metal": "#2A3439",
+    "space grey": "#4A4A4C", "space gray": "#4A4A4C", "jet black": "#0A0A0A",
+    "matte black": "#1B1B1B", "pearl white": "#F2F0EB", "midnight black": "#0B0F1A"
+  };
+
+  /**
+   * The swatch a colour's name suggests, or null when it says nothing.
+   * A known phrase wins outright; otherwise the last specific shade, and only
+   * failing that the plain family.
+   */
+  function swatchForName(label) {
+    var words = String(label || "").toLowerCase().match(/[a-z]+/g) || [];
+    var joined = words.join(" ");
+
+    var phrase = null;
+    Object.keys(COLOR_PHRASES).forEach(function (key) {
+      if (joined.indexOf(key) !== -1) { phrase = COLOR_PHRASES[key]; }
+    });
+    if (phrase) { return phrase; }
+
+    var shade = null;
+    var family = null;
+    words.forEach(function (word) {
+      if (!Object.prototype.hasOwnProperty.call(COLOR_WORDS, word)) { return; }
+      if (GENERIC_WORDS[word]) { family = COLOR_WORDS[word]; }
+      else { shade = COLOR_WORDS[word]; }
+    });
+    return shade || family;
+  }
+
+  /** A colour input shows black for anything it cannot parse. */
+  function hexOrDefault(value) {
+    var hex = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#64748B";
+  }
+
+  var FRAME_SIZE = 1100;
+  var THUMB_SIZE = 550;
+
+  // A transparent 1x1, so an empty picture slot is an empty frame rather than
+  // a browser's broken-image icon.
+  var BLANK_PIXEL =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+  /**
+   * The small copy of a framed photo, matching what the catalogue asks for.
+   * Returns null for anything not filed under framed/, which has no thumbnail.
+   */
+  function thumbPath(url) {
+    if (!url || url.indexOf("/framed/") === -1 || url.indexOf("/thumb/") !== -1) { return null; }
+    var cut = url.lastIndexOf("/");
+    return url.slice(0, cut) + "/thumb" + url.slice(cut);
+  }
+
+  /** Draw `img` into a square of `size`, cropping the long side evenly. */
+  function squareCanvas(img, size) {
+    var canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext("2d");
+
+    // A photograph scaled into a square would squash; take the biggest
+    // centred square of the original instead and scale that.
+    var side = Math.min(img.naturalWidth, img.naturalHeight);
+    var sx = (img.naturalWidth - side) / 2;
+    var sy = (img.naturalHeight - side) / 2;
+
+    ctx.fillStyle = "#ffffff";        // JPEG has no transparency to keep
+    ctx.fillRect(0, 0, size, size);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+    return canvas;
+  }
+
+  /** Read a chosen file into an <img> the canvas can draw. */
+  function loadChosenImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("That file could not be read as an image."));
+      };
+      img.src = url;
+    });
+  }
+
+  /**
+   * Frame a chosen file and hand the stored path back.
+   * @returns {Promise<string>} the path to put in an image field
+   */
+  function frameAndUpload(file) {
+    return loadChosenImage(file).then(function (img) {
+      var full = squareCanvas(img, FRAME_SIZE).toDataURL("image/jpeg", 0.88);
+      var thumb = squareCanvas(img, THUMB_SIZE).toDataURL("image/jpeg", 0.82);
+      return api("/admin/products/image", {
+        method: "POST",
+        body: { name: file.name, full: full, thumb: thumb }
+      }).then(function (data) { return data.path; });
+    });
+  }
+
+  /**
+   * Give an image field its picture control: a thumbnail of what is set now,
+   * and a button that frames a chosen file and files it away. The path itself
+   * is held in a hidden input - it is the machine's business, not the
+   * shopkeeper's.
+   */
+  function attachImagePicker(input) {
+    if (!input || input.dataset.pickerAttached) { return; }
+    input.dataset.pickerAttached = "1";
+
+    var describes = input.getAttribute("data-picker-for") || "this product";
+    // Inside a colour row there is no room for a sentence, and none is needed:
+    // the thumbnail beside the button already says what the button is about.
+    var compact = !!input.closest(".vstock__row, .cedit__row");
+
+    function labelText() {
+      if (!compact) { return "Choose a picture"; }
+      return String(input.value || "").trim() ? "Change" : "Choose";
+    }
+
+    var thumb = document.createElement("img");
+    thumb.className = "imgpick__thumb";
+    thumb.alt = "";
+    thumb.setAttribute("aria-hidden", "true");
+
+    var picker = document.createElement("input");
+    picker.type = "file";
+    picker.accept = "image/*";
+    picker.className = "visually-hidden";
+
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn--outline btn--sm imgpick__btn";
+    button.textContent = labelText();
+    // The visible word is short; the spoken one stays a full phrase, and names
+    // the colour, since every button on screen otherwise reads alike.
+    button.setAttribute("aria-label", "Choose a picture for " + describes);
+
+    var note = document.createElement("span");
+    note.className = "imgpick__note";
+
+    // Show whatever is set at the moment. The small copy is preferred; the
+    // server hands back the full one when a thumbnail was never made.
+    function showCurrent() {
+      var value = String(input.value || "").trim();
+      if (!value) {
+        thumb.src = BLANK_PIXEL;
+        thumb.removeAttribute("title");
+        thumb.classList.add("imgpick__thumb--empty");
+        button.textContent = labelText();
+        return;
+      }
+      thumb.classList.remove("imgpick__thumb--empty");
+      thumb.title = value.split("/").pop();
+      button.textContent = labelText();
+      var small = thumbPath(value);
+      thumb.onerror = function () {
+        thumb.onerror = null;         // one fallback, never a loop
+        thumb.src = value;
+      };
+      thumb.src = small || value;
+    }
+    showCurrent();
+
+    button.addEventListener("click", function () { picker.click(); });
+
+    picker.addEventListener("change", function () {
+      var file = picker.files && picker.files[0];
+      if (!file) { return; }
+      button.disabled = true;
+      button.textContent = "Framing…";
+      note.textContent = "";
+
+      frameAndUpload(file).then(function (storedPath) {
+        input.value = storedPath;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        showCurrent();                // the picture itself is the receipt
+        if (!compact) { note.textContent = "Squared to " + FRAME_SIZE + "px."; }
+      }).catch(function (error) {
+        note.textContent = error.message || "That picture could not be used.";
+      }).then(function () {
+        button.disabled = false;
+        button.textContent = labelText();
+        picker.value = "";            // so the same file can be picked again
+      });
+    });
+
+    var row = document.createElement("div");
+    row.className = "imgpick";
+    row.appendChild(thumb);
+    row.appendChild(button);
+    row.appendChild(note);
+    row.appendChild(picker);
+    input.parentNode.insertBefore(row, input.nextSibling);
+  }
+
+  /** Every image field in the drawer: the product's own, and each colour's. */
+  function wireImagePickers() {
+    attachImagePicker(document.getElementById("pImage"));
+    [].slice.call(document.querySelectorAll(".vstock__image, .cedit__image"))
+      .forEach(attachImagePicker);
+  }
   function productForm(p) {
     var product = p || {};
     return '<form id="productForm" novalidate><div class="form-grid">' +
@@ -409,11 +790,11 @@
       field("Old price", "pOldPrice", product.oldPrice, "number") +
       stockFields(product) +
       selectField("Badge", "pBadge", product.badge, [["", "None"], ["Sale", "Sale"], ["New", "New"]]) +
-      field("Image path", "pImage", product.image || "assets/images/products/", "text", true, true) +
-      // Colours are offered when creating. On an existing product the drawer
-      // already shows a stock box per colour; renaming or re-photographing a
-      // colour is a bigger job and is not offered here yet.
-      (p ? "" : colorEditor()) +
+      imageField("Product picture", "pImage", product.image) +
+      // Offered either way: as a new product's colours, or as more colours for
+      // one that already has some. Renaming or re-photographing a colour that
+      // is already on file is a bigger job, and is not offered here.
+      colorEditor(p) +
       field("Short description", "pShort", product.shortDescription, "text", true, true) +
       textField("Full description", "pDescription", product.description, true) +
       textField("Features (one per line)", "pFeatures", (product.features || []).join("\n"), true) +
@@ -428,6 +809,20 @@
       '<label for="' + id + '">' + esc(label) + (required ? "" : " <span style=\"color:#94A3B8\">(optional)</span>") + "</label>" +
       '<input type="' + type + '" id="' + id + '"' + (type === "number" ? ' step="0.01"' : "") +
         ' value="' + (value === null || value === undefined ? "" : esc(String(value))) + '" />' +
+      '<span class="field-error"></span></div>';
+  }
+
+  /**
+   * The product's own picture. Like the colour rows, the path is held but not
+   * shown - the picture control beside it is how one is chosen. Left empty for
+   * a new product so the server asks for a real choice rather than accepting
+   * a half-typed stub.
+   */
+  function imageField(label, id, value) {
+    return '<div class="field field--wide">' +
+      "<label>" + esc(label) + "</label>" +
+      '<input type="hidden" id="' + id + '" data-picker-for="this product"' +
+        ' value="' + esc(value || "") + '" />' +
       '<span class="field-error"></span></div>';
   }
 
@@ -447,23 +842,50 @@
 
   /** Whichever shape of stock control the form is currently showing. */
   function readStock() {
-    var boxes = [].slice.call(document.querySelectorAll(".vstock__input"));
-    if (!boxes.length) {
+    var rows = [].slice.call(document.querySelectorAll(".vstock__row"));
+    if (!rows.length) {
       return { stock: parseInt(document.getElementById("pStock").value, 10) };
     }
+
+    var leaving = rows.filter(function (r) { return r.classList.contains("is-removing"); });
+    var staying = rows.filter(function (r) { return !r.classList.contains("is-removing"); });
+    var idOf = function (row) { return row.getAttribute("data-existing-color"); };
+
+    // Only the survivors are described. Sending a count or a name for a colour
+    // in the same breath as removing it is a contradiction the server would
+    // have to guess its way out of.
     var variantStock = {};
-    boxes.forEach(function (el) {
-      variantStock[el.getAttribute("data-color-id")] = parseInt(el.value, 10);
-    });
-
-    // Each colour's photograph travels with its count — same rows, same save.
     var variantImages = {};
-    [].slice.call(document.querySelectorAll(".vstock__image")).forEach(function (el) {
-      variantImages[el.getAttribute("data-color-id")] = el.value.trim();
+    var variantSwatches = {};
+    var variantLabels = {};
+
+    staying.forEach(function (row) {
+      var id = idOf(row);
+      variantStock[id] = parseInt(row.querySelector(".vstock__input").value, 10);
+      variantSwatches[id] = row.querySelector(".vstock__swatch").value;
+      variantLabels[id] = row.querySelector(".vstock__name").value.trim();
+
+      // A colour with nothing on file is left OUT rather than sent as empty:
+      // the server reads an empty path as a mistake, not as "leave this one
+      // alone", so sending it would refuse the whole save over a colour the
+      // shopkeeper never touched.
+      var chosen = row.querySelector(".vstock__image").value.trim();
+      if (chosen) { variantImages[id] = chosen; }
     });
 
-    return { variantStock: variantStock, variantImages: variantImages };
+    var payload = {
+      variantStock: variantStock, variantImages: variantImages,
+      variantSwatches: variantSwatches, variantLabels: variantLabels
+    };
+
+    if (leaving.length) { payload.removeColors = leaving.map(idOf); }
+
+    var chosenDefault = document.querySelector(".vstock__default:checked");
+    if (chosenDefault) { payload.defaultColorId = chosenDefault.getAttribute("data-color-id"); }
+
+    return payload;
   }
+
   function readProductForm() {
     var features = document.getElementById("pFeatures").value
       .split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
@@ -496,13 +918,45 @@
     // twice and the card can never disagree with the default swatch.
     var colors = readColorRows();
     if (colors.length) {
-      payload.colors = colors;
-      if (colors[0].image) { payload.image = colors[0].image; }
-      payload.stock = colors.reduce(function (sum, c) {
-        return sum + (isNaN(c.stockCount) ? 0 : c.stockCount);
-      }, 0);
+      var editor = document.getElementById("colorRows");
+      if (editor && editor.getAttribute("data-color-mode") === "add") {
+        // Adding to a product that already exists: the colours on file keep
+        // their own counts and pictures, and the server works out the new
+        // total - so neither the stock nor the card image is set from here.
+        payload.addColors = colors;
+      } else {
+        payload.colors = colors;
+        if (colors[0].image) { payload.image = colors[0].image; }
+        payload.stock = colors.reduce(function (sum, c) {
+          return sum + (isNaN(c.stockCount) ? 0 : c.stockCount);
+        }, 0);
+      }
     }
     return payload;
+  }
+
+  /**
+   * A complaint about one colour, e.g. "variantImages.onyx-black" when
+   * editing or "colors.2" when creating, pointed back at the row it is about.
+   */
+  function colourFieldFor(field) {
+    var editing = /^variantImages\.(.+)$/.exec(field);
+    if (editing) { return document.getElementById("vimage-" + editing[1]); }
+    var swatch = /^variantSwatches\.(.+)$/.exec(field);
+    if (swatch) { return document.getElementById("vswatch-" + swatch[1]); }
+    var creating = /^(?:colors|addColors)\.(\d+)$/.exec(field);
+    if (creating) {
+      var row = document.querySelectorAll("[data-color-row]")[Number(creating[1])];
+      return row ? row.querySelector(".cedit__image") : null;
+    }
+    return null;
+  }
+
+  function clearFormErrors() {
+    [].slice.call(document.querySelectorAll("#productForm .is-invalid"))
+      .forEach(function (el) { el.classList.remove("is-invalid"); });
+    [].slice.call(document.querySelectorAll("#productForm .field-error"))
+      .forEach(function (el) { el.textContent = ""; });
   }
 
   function paintFormErrors(error) {
@@ -511,15 +965,25 @@
       stock: "pStock", image: "pImage", shortDescription: "pShort",
       description: "pDescription", badge: "pBadge"
     };
+    var unplaced = [];
+
     (error.errors || []).forEach(function (item) {
-      var el = document.getElementById(map[item.field]);
-      if (!el) { return; }
-      var wrap = el.closest(".field");
+      var el = document.getElementById(map[item.field]) || colourFieldFor(item.field);
+      var wrap = el ? el.closest(".field") : null;
+      if (!wrap) { unplaced.push(item.message); return; }
       wrap.classList.add("is-invalid");
+      // Mark the colour's own row too, so the eye lands on the right one
+      // among several.
+      var row = el.closest(".vstock__row, .cedit__row");
+      if (row) { row.classList.add("is-invalid"); }
       var hint = wrap.querySelector(".field-error");
       if (hint) { hint.textContent = item.message; }
     });
-    if (!(error.errors || []).length) { ui.showToast(error.message); }
+
+    // Nothing may fail in silence. Anything that could not be pinned to a
+    // field on screen is still said out loud, or the save looks like it worked.
+    if (unplaced.length) { ui.showToast(unplaced[0]); }
+    else if (!(error.errors || []).length) { ui.showToast(error.message); }
   }
 
   function editProduct(product) {
@@ -532,12 +996,15 @@
     );
 
     wireStockTotal();
+    wireColorRemoval();
     wireColorEditor();
+    wireImagePickers();
 
     document.getElementById("saveProduct").addEventListener("click", function () {
       var button = this;
       button.disabled = true;
       button.textContent = "Saving…";
+      clearFormErrors();            // last attempt's marks are not this one's
 
       var payload = readProductForm();
       var request = isNew
