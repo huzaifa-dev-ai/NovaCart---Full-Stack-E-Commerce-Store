@@ -2,12 +2,27 @@
 
 A full stack e-commerce store built for the **CodeAlpha Full Stack Development internship**.
 
-Customers browse a 56-product catalog, add to a cart, check out, track their orders and
-request returns. Administrators manage products, orders, returns and users from a
-dedicated dashboard. Everything is backed by MongoDB and a REST API.
+Customers browse a 56-product catalog, pick a colour, add to a cart, pay by card or on
+delivery, track their orders and request returns. Administrators manage products, colours,
+orders, returns and users from a dedicated dashboard. Everything is backed by MongoDB and
+a REST API.
 
 **Stack** — Vanilla HTML5 / CSS3 / JavaScript on the front end (no frameworks, no build
-step) · Node.js + Express 5 · MongoDB + Mongoose · JWT auth in httpOnly cookies · Nodemailer
+step) · Node.js + Express 5 · MongoDB + Mongoose · JWT auth in httpOnly cookies · Stripe ·
+Nodemailer
+
+---
+
+## A look at it
+
+| | |
+|---|---|
+| ![The storefront](docs/screenshots/storefront.png) | ![The catalog](docs/screenshots/catalog.png) |
+| **Storefront** — the landing page | **Catalog** — 56 products, 13 category filters, colour swatches on every card |
+| ![A product](docs/screenshots/product.png) | ![The admin dashboard](docs/screenshots/admin.png) |
+| **Product** — colour picker, live stock, related items | **Admin** — revenue, stock alerts and fulfilment at a glance |
+
+Every shot is a real page, captured from a clean `npm run seed`.
 
 ---
 
@@ -16,8 +31,16 @@ step) · Node.js + Express 5 · MongoDB + Mongoose · JWT auth in httpOnly cooki
 ### Storefront
 - **Product listing** — 56 products across 13 categories, with search, category filters and sorting
 - **Product details** — full description, feature list, stock state, quantity selector, related products
+- **Colour variants** — every product carries selectable colours, each with its own swatch,
+  photo and independent stock count. The choice follows the item into the cart, onto the
+  order, and back out through a return, which restocks that colour rather than the product
 - **Cart** — quantity editing, live totals, free-shipping progress bar, stock-aware limits
 - **Checkout** — validated customer form, order summary, server-priced totals
+- **Payments** — Cash on Delivery, or card via Stripe Elements. The card form is mounted by
+  Stripe, so card numbers never reach this server. An order is marked paid only after the
+  server re-fetches the PaymentIntent from Stripe and sees it succeeded — the browser is
+  never believed. With no Stripe keys configured the card option falls back to a simulated
+  approval, so the whole flow stays demoable without an account
 - **Order success** — order number and recap, fetched from the API
 - **Order history** — track deliveries, view past orders, start a return within 30 days
 - **Accounts** — register, sign in, password reset by email, change password
@@ -28,6 +51,9 @@ step) · Node.js + Express 5 · MongoDB + Mongoose · JWT auth in httpOnly cooki
 ### Admin dashboard
 - **Overview** — revenue, orders, customers, stock alerts, open returns, recent activity
 - **Products** — create, edit, archive, restock; search and filter
+- **Colours** — add or remove a colour, set its name and swatch, choose which one shows
+  first, and hold a separate stock count per colour. Product photos can be uploaded
+  straight from the device rather than typed in as a path
 - **Orders** — advance orders through fulfilment with a validated status flow and audit trail
 - **Returns** — approve, reject or refund, with automatic restocking
 - **Users** — view accounts with order counts and spend, change roles, remove accounts
@@ -62,9 +88,18 @@ Then open `.env` and fill it in:
 | `MONGODB_URI` | ✅ | Connection string |
 | `JWT_SECRET` | ✅ | 32+ random characters — generate one with the command below |
 | `JWT_EXPIRES_IN` | | Session length with "keep me signed in" (default `30d`) |
+| `JWT_SESSION_EXPIRES_IN` | | Session length *without* it (default `1d`) |
+| `JWT_COOKIE_DAYS` | | How long the cookie itself lives (default `30`) |
 | `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✅ | The single admin account, created by the seed script |
 | `SMTP_*` | | Mail delivery. Leave `SMTP_HOST` empty to log emails to the console instead |
+| `MAIL_ETHEREAL` | | `true` uses a throwaway [Ethereal](https://ethereal.email) inbox — a real SMTP round trip with no credentials, preview URLs logged |
 | `CONTACT_TO` | | Where contact-form messages are sent (defaults to `ADMIN_EMAIL`) |
+| `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` | | Card payments. Leave empty and the card option falls back to a simulated approval |
+| `STRIPE_WEBHOOK_SECRET` | | Verifies Stripe webhook signatures |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | | Google Sign-In. Leave both blank to hide the button — see [2b](#2b-google-sign-in-optional) |
+| `USE_HTTPS` | | `true` serves the site over TLS locally — see [Local HTTPS](#local-https-optional) |
+| `SSL_KEY_PATH` / `SSL_CERT_PATH` | | Where `npm run cert` writes the certificate (default `certs/`) |
+| `TRUST_PROXY` | | Proxy hops to trust, usually `1`. Set this **only** behind a real proxy: trusting one that isn't there lets any caller forge their IP and walk past every rate limit |
 
 Generate a strong JWT secret:
 
@@ -84,12 +119,14 @@ The site works fully without this — the button simply isn't shown.
 4. Under **Authorized redirect URIs** add this exact string:
 
    ```
-   https://localhost:5000/api/auth/google/callback
+   http://localhost:5000/api/auth/google/callback
    ```
 
    It must match `APP_URL` character for character, including the scheme and port, or
-   Google answers `redirect_uri_mismatch`. If you run over plain HTTP, register the
-   `http://` form instead.
+   Google answers `redirect_uri_mismatch`. That is the `http://` form because
+   `.env.example` ships `APP_URL=http://localhost:5000` and `USE_HTTPS=false`. If you turn
+   on [local HTTPS](#local-https-optional), register the `https://` variant to match — or
+   add both and switch `APP_URL` freely.
 5. Put the two values in `.env`:
 
    ```ini
@@ -166,6 +203,20 @@ npm start       # plain node
 
 Open **http://localhost:5000** — Express serves the site and the API from one origin.
 
+### Local HTTPS (optional)
+
+Browsers disable card autofill on insecure origins, so serving the site over TLS locally
+makes the payment pages behave the way they will in production.
+
+```bash
+npm run cert    # writes certs/localhost-key.pem and certs/localhost-cert.pem
+```
+
+Then set `USE_HTTPS=true` and `APP_URL=https://localhost:5000` in `.env` and restart. The
+certificate is self-signed, so the browser will ask you to accept it once. `certs/` is
+gitignored — private keys are never committed. Leave `USE_HTTPS=false` and everything runs
+over plain HTTP, which is the default.
+
 ---
 
 ## Brand assets
@@ -194,7 +245,7 @@ by their headings rather than by different icons.
 ```
 NovaCart/
 ├── public/                    everything served to the browser
-│   ├── *.html                 14 pages
+│   ├── *.html                 16 pages
 │   ├── css/style.css          one stylesheet, design tokens at the top
 │   ├── js/                    one module per page + shared helpers
 │   └── assets/images/         hero art and product photography
@@ -255,6 +306,15 @@ reachable over HTTP.
 | GET | `/api/returns` | **admin** | All returns |
 | PATCH | `/api/returns/:id` | **admin** | Approve / reject / refund |
 
+### Payments
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `/api/payments/config` | public | Which methods are on, plus the Stripe publishable key |
+| POST | `/api/payments/create-intent` | signed in | Open a Stripe PaymentIntent for an order |
+| POST | `/api/payments/verify` | signed in | Re-fetch the intent from Stripe and mark the order paid |
+| POST | `/api/payments/simulate` | signed in | Approve without Stripe, for when no keys are set |
+| POST | `/api/payments/webhook` | Stripe | Signed webhook, on the raw body |
+
 ### Admin
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -263,7 +323,8 @@ reachable over HTTP.
 | PATCH | `/api/admin/users/:id` | Change a role |
 | DELETE | `/api/admin/users/:id` | Remove an account |
 | POST | `/api/admin/products` | Create a product |
-| PATCH | `/api/admin/products/:id` | Update a product |
+| POST | `/api/admin/products/image` | Upload a product photo from the device |
+| PATCH | `/api/admin/products/:id` | Update a product, its colours and per-colour stock |
 | DELETE | `/api/admin/products/:id` | Archive (or `?hard=true` to delete) |
 
 Also: `GET /api/health` reports uptime and database connectivity, and
@@ -344,10 +405,16 @@ npm run test:otp      # password reset by one-time code
 ```
 
 They run against a live server, so start it first with `npm run dev`. The suites create
-and clean up their own `@example.com` fixtures.
+and clean up their own `@example.com` fixtures. `npm test` covers **286 checks**; run it
+against a freshly seeded database, since a few admin assertions expect catalog stock
+levels rather than whatever your development data has been drained to.
 
-> Rate limiting is real, so running the suites repeatedly in quick succession can trip the
-> limiter. Restart the server to reset the counters.
+> **Run `npm run test:otp` on its own.** Password resets are limited to five an hour per
+> IP, and the recovery, mail and security suites have already spent that window by the
+> time the chain reaches the OTP suite — so it reports being rate-limited rather than
+> failing on merit. Restart the server to reset the counters, then run it alone for its
+> full 40 checks. The same applies to re-running any suite in quick succession: rate
+> limiting is real here, and it is doing its job.
 
 ---
 
@@ -375,4 +442,4 @@ and clean up their own `@example.com` fixtures.
 
 ## Licence
 
-MIT
+MIT — see [LICENSE](LICENSE).
