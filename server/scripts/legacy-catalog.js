@@ -17,7 +17,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 129.99,
     "oldPrice": 169.99,
-    "image": "assets/images/products/headphones.jpg",
+    "image": "assets/images/products/framed/headphones (Default).jpg",
     "shortDescription": "Over-ear headphones with active noise cancelling and 40-hour battery life.",
     "description": "The Aurora wraps studio-grade sound in a feather-light over-ear build you can wear all day. Hybrid active noise cancelling silences commutes and open offices, while the 40-hour battery outlasts even your longest week. Fold them flat, drop them in the included case, and go.",
     "features": [
@@ -36,10 +36,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/headphones.jpg",
-        "gallery": [
-          "assets/images/products/headphones.jpg"
-        ],
+        "image": "assets/images/products/framed/headphones (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -47,10 +45,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/headphones.jpg",
-        "gallery": [
-          "assets/images/products/headphones.jpg"
-        ],
+        "image": "assets/images/products/framed/headphones 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -58,10 +54,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/headphones.jpg",
-        "gallery": [
-          "assets/images/products/headphones.jpg"
-        ],
+        "image": "assets/images/products/framed/headphones 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -74,7 +68,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Wearables",
     "price": 199,
     "oldPrice": null,
-    "image": "assets/images/products/smartwatch.jpg",
+    "image": "assets/images/products/framed/smartwatch (Default).jpg",
     "shortDescription": "Track workouts, sleep and heart rate on a crisp always-on AMOLED display.",
     "description": "Pulse keeps the essentials on your wrist and the noise out of your day. A bright always-on AMOLED display, week-long battery, and precise heart-rate, sleep and workout tracking across 120+ sport modes — all in a water-resistant case that goes from gym to dinner.",
     "features": [
@@ -93,10 +87,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "midnight-black",
         "label": "Midnight Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/smartwatch.jpg",
-        "gallery": [
-          "assets/images/products/smartwatch.jpg"
-        ],
+        "image": "assets/images/products/framed/smartwatch 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 13
       },
@@ -104,10 +96,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "silver-steel",
         "label": "Silver Steel",
         "swatchHex": "#cbd5e1",
-        "image": "assets/images/products/smartwatch.jpg",
-        "gallery": [
-          "assets/images/products/smartwatch.jpg"
-        ],
+        "image": "assets/images/products/framed/smartwatch (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -115,10 +105,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "rose-gold",
         "label": "Rose Gold",
         "swatchHex": "#e0a96d",
-        "image": "assets/images/products/smartwatch.jpg",
-        "gallery": [
-          "assets/images/products/smartwatch.jpg"
-        ],
+        "image": "assets/images/products/framed/smartwatch 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       }
@@ -131,7 +119,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Bags",
     "price": 74.5,
     "oldPrice": 89,
-    "image": "assets/images/products/backpack.jpg",
+    "image": "assets/images/products/framed/backpack (Defualt).jpg",
     "shortDescription": "Water-resistant 22L pack with a padded laptop sleeve and hidden pockets.",
     "description": "The Nomad is the one bag that handles the office, the gym and a weekend away. Its 22-litre main compartment opens flat for easy packing, a padded sleeve protects laptops up to 16″, and the water-resistant shell with storm-sealed zips shrugs off real weather.",
     "features": [
@@ -150,10 +138,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "charcoal-black",
         "label": "Charcoal Black",
         "swatchHex": "#1f2937",
-        "image": "assets/images/products/backpack.jpg",
-        "gallery": [
-          "assets/images/products/backpack.jpg"
-        ],
+        "image": "assets/images/products/framed/backpack (Defualt).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -161,10 +147,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "navy-blue",
         "label": "Navy Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/backpack.jpg",
-        "gallery": [
-          "assets/images/products/backpack.jpg"
-        ],
+        "image": "assets/images/products/framed/backpack 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -172,10 +156,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "olive-green",
         "label": "Olive Green",
         "swatchHex": "#3f6212",
-        "image": "assets/images/products/backpack.jpg",
-        "gallery": [
-          "assets/images/products/backpack.jpg"
-        ],
+        "image": "assets/images/products/framed/backpack 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       }
@@ -188,7 +170,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Accessories",
     "price": 59.99,
     "oldPrice": null,
-    "image": "assets/images/products/sunglasses.jpg",
+    "image": "assets/images/products/framed/sunglasses (Default).jpg",
     "shortDescription": "UV400 polarized lenses in a lightweight acetate frame built to last.",
     "description": "Solstice pairs timeless wayfarer lines with modern optics. Polarized UV400 lenses cut glare on the road and on the water, while the hand-polished acetate frame with spring hinges stays comfortable from first coffee to last light. Includes a hard case and microfibre cloth.",
     "features": [
@@ -207,10 +189,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "classic-black",
         "label": "Classic Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/sunglasses.jpg",
-        "gallery": [
-          "assets/images/products/sunglasses.jpg"
-        ],
+        "image": "assets/images/products/framed/sunglasses (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 20
       },
@@ -218,10 +198,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "amber-tortoise",
         "label": "Amber Tortoise",
         "swatchHex": "#92400e",
-        "image": "assets/images/products/sunglasses.jpg",
-        "gallery": [
-          "assets/images/products/sunglasses.jpg"
-        ],
+        "image": "assets/images/products/framed/sunglasses 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 20
       },
@@ -229,10 +207,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-blue",
         "label": "Slate Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/sunglasses.jpg",
-        "gallery": [
-          "assets/images/products/sunglasses.jpg"
-        ],
+        "image": "assets/images/products/framed/sunglasses 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -245,7 +221,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 649,
     "oldPrice": 729,
-    "image": "assets/images/products/camera.jpg",
+    "image": "assets/images/products/framed/camera (Defualt).jpg",
     "shortDescription": "24MP sensor, 4K video and dual card slots in a compact travel-ready body.",
     "description": "The Vertex puts serious imaging in a body that disappears into a jacket pocket. A 24MP APS-C sensor and fast hybrid autofocus nail the moment, 4K/30 video handles the b-roll, and dual card slots plus a weather-sealed magnesium shell make it a dependable travel companion.",
     "features": [
@@ -264,10 +240,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/camera.jpg",
-        "gallery": [
-          "assets/images/products/camera.jpg"
-        ],
+        "image": "assets/images/products/framed/camera (Defualt).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -275,10 +249,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/camera.jpg",
-        "gallery": [
-          "assets/images/products/camera.jpg"
-        ],
+        "image": "assets/images/products/framed/camera 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -286,10 +258,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/camera.jpg",
-        "gallery": [
-          "assets/images/products/camera.jpg"
-        ],
+        "image": "assets/images/products/framed/camera 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 1
       }
@@ -302,7 +272,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 109,
     "oldPrice": null,
-    "image": "assets/images/products/keyboard.jpg",
+    "image": "assets/images/products/framed/keyboard (Default).jpg",
     "shortDescription": "Hot-swappable switches, per-key backlight and a solid aluminium frame.",
     "description": "Cadence is built for people who notice the difference. Hot-swappable switches let you tune the feel without a soldering iron, the gasket-mounted aluminium frame keeps every keystroke solid and quiet, and per-key backlighting with wireless or USB-C keeps your desk clean.",
     "features": [
@@ -321,10 +291,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/keyboard.jpg",
-        "gallery": [
-          "assets/images/products/keyboard.jpg"
-        ],
+        "image": "assets/images/products/framed/keyboard (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -332,10 +300,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/keyboard.jpg",
-        "gallery": [
-          "assets/images/products/keyboard.jpg"
-        ],
+        "image": "assets/images/products/framed/keyboard 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -343,10 +309,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/keyboard.jpg",
-        "gallery": [
-          "assets/images/products/keyboard.jpg"
-        ],
+        "image": "assets/images/products/framed/keyboard 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       }
@@ -359,7 +323,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Footwear",
     "price": 89.95,
     "oldPrice": null,
-    "image": "assets/images/products/sneakers.jpg",
+    "image": "assets/images/products/framed/sneakers (Default).jpg",
     "shortDescription": "Breathable knit upper with responsive foam cushioning for daily miles.",
     "description": "Drift is the daily trainer that never asks for a day off. A seamless knit upper keeps feet cool and blister-free, responsive foam returns energy mile after mile, and the durable rubber outsole grips wet pavement with confidence. Light enough for tempo days, cushioned enough for long ones.",
     "features": [
@@ -378,10 +342,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/sneakers.jpg",
-        "gallery": [
-          "assets/images/products/sneakers.jpg"
-        ],
+        "image": "assets/images/products/framed/sneakers 1.png",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -389,10 +351,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-red",
         "label": "Crimson Red",
         "swatchHex": "#dc2626",
-        "image": "assets/images/products/sneakers.jpg",
-        "gallery": [
-          "assets/images/products/sneakers.jpg"
-        ],
+        "image": "assets/images/products/framed/sneakers (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -400,10 +360,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-cyan",
         "label": "Electric Cyan",
         "swatchHex": "#0891b2",
-        "image": "assets/images/products/sneakers.jpg",
-        "gallery": [
-          "assets/images/products/sneakers.jpg"
-        ],
+        "image": "assets/images/products/framed/sneakers 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -416,7 +374,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Home",
     "price": 44,
     "oldPrice": 55,
-    "image": "assets/images/products/lamp.jpg",
+    "image": "assets/images/products/lamp (Default).jpg",
     "shortDescription": "Adjustable arm with three colour temperatures and a USB charging port.",
     "description": "Lumen gives your desk the light it deserves. Three colour temperatures move from crisp focus white to a warm evening glow, the double-hinged arm puts light exactly where you need it, and the built-in USB port tops up your phone while you work. Flicker-free and easy on the eyes.",
     "features": [
@@ -435,10 +393,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "matte-black",
         "label": "Matte Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/lamp.jpg",
-        "gallery": [
-          "assets/images/products/lamp.jpg"
-        ],
+        "image": "assets/images/products/lamp (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 16
       },
@@ -446,10 +402,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "brushed-brass",
         "label": "Brushed Brass",
         "swatchHex": "#d97706",
-        "image": "assets/images/products/lamp.jpg",
-        "gallery": [
-          "assets/images/products/lamp.jpg"
-        ],
+        "image": "assets/images/products/framed/lamp 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -457,10 +411,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "nordic-white",
         "label": "Nordic White",
         "swatchHex": "#f1f5f9",
-        "image": "assets/images/products/lamp.jpg",
-        "gallery": [
-          "assets/images/products/lamp.jpg"
-        ],
+        "image": "assets/images/products/framed/lamp 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       }
@@ -472,7 +424,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 79.99,
     "oldPrice": 99.99,
-    "image": "assets/images/products/nova-buds-pro.jpg",
+    "image": "assets/images/products/framed/nova-buds-pro (Default).jpg",
     "shortDescription": "True wireless earbuds with hybrid noise cancelling and 32-hour total battery life.",
     "description": "Nova Buds Pro are for commutes that deserve better sound. Hybrid active noise cancelling shuts out the carriage rumble, 10mm drivers keep the low end warm without smearing the mids, and a transparency mode lets the platform announcements through when you need them. The charging case adds three full top-ups and a fifteen-minute charge buys two hours of listening.",
     "features": [
@@ -491,10 +443,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/nova-buds-pro.jpg",
-        "gallery": [
-          "assets/images/products/nova-buds-pro.jpg"
-        ],
+        "image": "assets/images/products/framed/nova-buds-pro 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 17
       },
@@ -502,10 +452,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/nova-buds-pro.jpg",
-        "gallery": [
-          "assets/images/products/nova-buds-pro.jpg"
-        ],
+        "image": "assets/images/products/framed/nova-buds-pro (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -513,10 +461,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/nova-buds-pro.jpg",
-        "gallery": [
-          "assets/images/products/nova-buds-pro.jpg"
-        ],
+        "image": "assets/images/products/framed/nova-buds-pro 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       }
@@ -528,7 +474,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 39.99,
     "oldPrice": null,
-    "image": "assets/images/products/echo-mini-speaker.jpg",
+    "image": "assets/images/products/framed/echo-mini-speaker (Default).jpg",
     "shortDescription": "Palm-sized Bluetooth speaker with 12-hour battery life and IPX7 waterproofing.",
     "description": "Echo Mini proves a speaker this small has no business sounding this big. A 48mm full-range driver and passive radiator dig out real bass, IPX7 waterproofing shrugs off pool splashes, and two units pair up for proper stereo. Twelve hours of playback covers a full day out on one USB-C charge.",
     "features": [
@@ -547,10 +493,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/echo-mini-speaker.jpg",
-        "gallery": [
-          "assets/images/products/echo-mini-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/echo-mini-speaker 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 21
       },
@@ -558,10 +502,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/echo-mini-speaker.jpg",
-        "gallery": [
-          "assets/images/products/echo-mini-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/echo-mini-speaker (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 21
       },
@@ -569,10 +511,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/echo-mini-speaker.jpg",
-        "gallery": [
-          "assets/images/products/echo-mini-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/echo-mini-speaker 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -584,7 +524,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 89,
     "oldPrice": null,
-    "image": "assets/images/products/wavecast-mic.jpg",
+    "image": "assets/images/products/framed/wavecast-mic (Default).jpg",
     "shortDescription": "Cardioid USB condenser microphone with onboard gain control and zero-latency monitoring.",
     "description": "Wavecast makes your voice the clearest thing in the call, stream, or take. A 25mm condenser capsule records at 24-bit/96kHz, the cardioid pattern rejects the keyboard clatter behind you, and a tap-to-mute pad with zero-latency headphone monitoring keeps you in control. It sits on the included desk stand or threads straight onto a boom arm.",
     "features": [
@@ -603,10 +543,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/wavecast-mic.jpg",
-        "gallery": [
-          "assets/images/products/wavecast-mic.jpg"
-        ],
+        "image": "assets/images/products/framed/wavecast-mic (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -614,10 +552,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/wavecast-mic.jpg",
-        "gallery": [
-          "assets/images/products/wavecast-mic.jpg"
-        ],
+        "image": "assets/images/products/framed/wavecast-mic 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -625,10 +561,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/wavecast-mic.jpg",
-        "gallery": [
-          "assets/images/products/wavecast-mic.jpg"
-        ],
+        "image": "assets/images/products/framed/wavecast-mic 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       }
@@ -640,7 +574,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 149,
     "oldPrice": 179,
-    "image": "assets/images/products/retrospin-turntable.jpg",
+    "image": "assets/images/products/framed/retrospin-turntable (Default).jpg",
     "shortDescription": "Belt-drive turntable with Bluetooth output, built-in phono preamp, and USB recording.",
     "description": "Retrospin treats your records with more respect than its price suggests. A belt-driven aluminium platter and adjustable counterweight keep tracking accurate, the built-in phono preamp plugs into any powered speaker, and Bluetooth streams your vinyl to the kit you already own. A USB output digitises your collection when you want copies for the road.",
     "features": [
@@ -659,10 +593,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/retrospin-turntable.jpg",
-        "gallery": [
-          "assets/images/products/retrospin-turntable.jpg"
-        ],
+        "image": "assets/images/products/framed/retrospin-turntable (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -670,10 +602,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/retrospin-turntable.jpg",
-        "gallery": [
-          "assets/images/products/retrospin-turntable.jpg"
-        ],
+        "image": "assets/images/products/framed/retrospin-turntable (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -681,10 +611,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/retrospin-turntable.jpg",
-        "gallery": [
-          "assets/images/products/retrospin-turntable.jpg"
-        ],
+        "image": "assets/images/products/framed/retrospin-turntable (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       }
@@ -696,7 +624,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 199,
     "oldPrice": 249,
-    "image": "assets/images/products/cinemabar-soundbar.jpg",
+    "image": "assets/images/products/framed/cinemabar-soundbar (Default).jpg",
     "shortDescription": "2.1-channel soundbar with wireless subwoofer, HDMI ARC, and a dedicated dialogue mode.",
     "description": "CinemaBar exists because TV speakers ruin good films. Three driver pairs and a wireless subwoofer put weight behind every scene, a dedicated dialogue mode lifts voices out of the mix, and HDMI ARC means one cable and one remote. Bluetooth turns it into the living-room music system between films.",
     "features": [
@@ -715,10 +643,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/cinemabar-soundbar.jpg",
-        "gallery": [
-          "assets/images/products/cinemabar-soundbar.jpg"
-        ],
+        "image": "assets/images/products/framed/cinemabar-soundbar (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -726,10 +652,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/cinemabar-soundbar.jpg",
-        "gallery": [
-          "assets/images/products/cinemabar-soundbar.jpg"
-        ],
+        "image": "assets/images/products/framed/cinemabar-soundbar 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -737,10 +661,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/cinemabar-soundbar.jpg",
-        "gallery": [
-          "assets/images/products/cinemabar-soundbar.jpg"
-        ],
+        "image": "assets/images/products/framed/cinemabar-soundbar 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -752,7 +674,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 69.99,
     "oldPrice": null,
-    "image": "assets/images/products/raid-gaming-headset.jpg",
+    "image": "assets/images/products/framed/raid-gaming-headset (Default).jpg",
     "shortDescription": "Wired gaming headset with 50mm drivers, detachable boom mic, and memory-foam earcups.",
     "description": "Raid Pro is built for the sessions that run past midnight. 50mm drivers place footsteps precisely, the detachable boom mic passes broadcast-clean comms, and memory-foam earcups under a suspended headband stay comfortable long after the third overtime. It plugs into anything with a 3.5mm jack, console or PC alike.",
     "features": [
@@ -771,10 +693,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/raid-gaming-headset.jpg",
-        "gallery": [
-          "assets/images/products/raid-gaming-headset.jpg"
-        ],
+        "image": "assets/images/products/framed/raid-gaming-headset (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 14
       },
@@ -782,10 +702,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/raid-gaming-headset.jpg",
-        "gallery": [
-          "assets/images/products/raid-gaming-headset.jpg"
-        ],
+        "image": "assets/images/products/framed/raid-gaming-headset (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -793,10 +711,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/raid-gaming-headset.jpg",
-        "gallery": [
-          "assets/images/products/raid-gaming-headset.jpg"
-        ],
+        "image": "assets/images/products/framed/raid-gaming-headset (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       }
@@ -808,7 +724,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 54,
     "oldPrice": null,
-    "image": "assets/images/products/heritage-radio.jpg",
+    "image": "assets/images/products/framed/heritage-radio (Default).jpg",
     "shortDescription": "FM and DAB tabletop radio with Bluetooth streaming in a walnut-finish wooden cabinet.",
     "description": "Heritage looks like it belongs in a kitchen photograph from 1962 and streams like it was made this year. A 3-inch full-range driver in a tuned wooden cabinet gives voices their warmth back, DAB and FM cover the airwaves, and Bluetooth handles everything the airwaves don't. The rotary dials do exactly what rotary dials should.",
     "features": [
@@ -827,10 +743,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/heritage-radio.jpg",
-        "gallery": [
-          "assets/images/products/heritage-radio.jpg"
-        ],
+        "image": "assets/images/products/framed/heritage-radio (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -838,10 +752,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/heritage-radio.jpg",
-        "gallery": [
-          "assets/images/products/heritage-radio.jpg"
-        ],
+        "image": "assets/images/products/framed/heritage-radio (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -849,10 +761,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/heritage-radio.jpg",
-        "gallery": [
-          "assets/images/products/heritage-radio.jpg"
-        ],
+        "image": "assets/images/products/framed/heritage-radio (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       }
@@ -864,7 +774,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Audio",
     "price": 229,
     "oldPrice": null,
-    "image": "assets/images/products/reference-monitors.jpg",
+    "image": "assets/images/products/framed/reference-monitors (Default).jpg",
     "shortDescription": "Powered 4-inch studio monitor pair with bi-amped drivers and rear acoustic tuning switches.",
     "description": "Reference Duo tells you the truth about your mix. Bi-amped 4-inch woofers and silk-dome tweeters stay flat where hype speakers flatter, rear tuning switches adapt the pair to your desk and room, and balanced TRS joins RCA and aux inputs on the back panel. Fifty watts a side is more than a small room will ever ask for.",
     "features": [
@@ -883,10 +793,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#1a1a1a",
-        "image": "assets/images/products/reference-monitors.jpg",
-        "gallery": [
-          "assets/images/products/reference-monitors.jpg"
-        ],
+        "image": "assets/images/products/framed/reference-monitors (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -894,10 +802,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "arctic-white",
         "label": "Arctic White",
         "swatchHex": "#f5f5f5",
-        "image": "assets/images/products/reference-monitors.jpg",
-        "gallery": [
-          "assets/images/products/reference-monitors.jpg"
-        ],
+        "image": "assets/images/products/framed/reference-monitors (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -905,10 +811,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cobalt-blue",
         "label": "Cobalt Blue",
         "swatchHex": "#1e3a8a",
-        "image": "assets/images/products/reference-monitors.jpg",
-        "gallery": [
-          "assets/images/products/reference-monitors.jpg"
-        ],
+        "image": "assets/images/products/framed/reference-monitors (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -920,7 +824,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Wearables",
     "price": 49.99,
     "oldPrice": 69.99,
-    "image": "assets/images/products/stride-fitness-band.jpg",
+    "image": "assets/images/products/framed/stride-fitness-band (Default).jpg",
     "shortDescription": "Slim fitness band with continuous heart-rate and sleep tracking and a 10-day battery.",
     "description": "Stride keeps score so you don't have to. Continuous heart-rate and sleep tracking feed a readiness picture each morning, fourteen sport modes cover everything from intervals to laps, and 5ATM water resistance means the pool counts too. Ten days between charges makes it easy to forget the cable exists.",
     "features": [
@@ -939,10 +843,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "midnight-black",
         "label": "Midnight Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/stride-fitness-band.jpg",
-        "gallery": [
-          "assets/images/products/stride-fitness-band.jpg"
-        ],
+        "image": "assets/images/products/framed/stride-fitness-band (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 19
       },
@@ -950,10 +852,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "silver-steel",
         "label": "Silver Steel",
         "swatchHex": "#cbd5e1",
-        "image": "assets/images/products/stride-fitness-band.jpg",
-        "gallery": [
-          "assets/images/products/stride-fitness-band.jpg"
-        ],
+        "image": "assets/images/products/framed/stride-fitness-band 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -961,10 +861,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "rose-gold",
         "label": "Rose Gold",
         "swatchHex": "#e0a96d",
-        "image": "assets/images/products/stride-fitness-band.jpg",
-        "gallery": [
-          "assets/images/products/stride-fitness-band.jpg"
-        ],
+        "image": "assets/images/products/framed/stride-fitness-band 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       }
@@ -976,7 +874,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Wearables",
     "price": 349,
     "oldPrice": null,
-    "image": "assets/images/products/portal-vr.jpg",
+    "image": "assets/images/products/framed/portal-vr ((Default)).jpg",
     "shortDescription": "Standalone VR headset with 4K combined resolution and inside-out room tracking.",
     "description": "Portal drops you somewhere else without a PC or a wire in sight. Twin fast-switch LCDs deliver 4K combined resolution at 90Hz, inside-out tracking maps your room through four wide-angle cameras, and the touch controllers translate every gesture. A balanced strap and 128GB of onboard storage keep long sessions comfortable and stocked.",
     "features": [
@@ -995,10 +893,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "midnight-black",
         "label": "Midnight Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/portal-vr.jpg",
-        "gallery": [
-          "assets/images/products/portal-vr.jpg"
-        ],
+        "image": "assets/images/products/framed/portal-vr ((Default)).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       },
@@ -1006,10 +902,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "silver-steel",
         "label": "Silver Steel",
         "swatchHex": "#cbd5e1",
-        "image": "assets/images/products/portal-vr.jpg",
-        "gallery": [
-          "assets/images/products/portal-vr.jpg"
-        ],
+        "image": "assets/images/products/framed/portal-vr ((Default)).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -1017,10 +911,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "rose-gold",
         "label": "Rose Gold",
         "swatchHex": "#e0a96d",
-        "image": "assets/images/products/portal-vr.jpg",
-        "gallery": [
-          "assets/images/products/portal-vr.jpg"
-        ],
+        "image": "assets/images/products/framed/portal-vr ((Default)).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       }
@@ -1032,7 +924,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Wearables",
     "price": 199,
     "oldPrice": null,
-    "image": "assets/images/products/orbit-smart-ring.jpg",
+    "image": "assets/images/products/framed/orbit-smart-ring (Default).jpg",
     "shortDescription": "Titanium smart ring tracking sleep, heart rate, and recovery for up to six days per charge.",
     "description": "Orbit tracks your health from the one place you'll never feel it. Sensors against the finger read heart rate, temperature, and blood oxygen through the night, the app turns them into a plain-language readiness score each morning, and there is no screen to charge away your attention. The titanium shell weighs under four grams and runs six days per charge.",
     "features": [
@@ -1051,10 +943,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "midnight-black",
         "label": "Midnight Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/orbit-smart-ring.jpg",
-        "gallery": [
-          "assets/images/products/orbit-smart-ring.jpg"
-        ],
+        "image": "assets/images/products/framed/orbit-smart-ring (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -1062,10 +952,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "silver-steel",
         "label": "Silver Steel",
         "swatchHex": "#cbd5e1",
-        "image": "assets/images/products/orbit-smart-ring.jpg",
-        "gallery": [
-          "assets/images/products/orbit-smart-ring.jpg"
-        ],
+        "image": "assets/images/products/framed/orbit-smart-ring (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -1073,10 +961,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "rose-gold",
         "label": "Rose Gold",
         "swatchHex": "#e0a96d",
-        "image": "assets/images/products/orbit-smart-ring.jpg",
-        "gallery": [
-          "assets/images/products/orbit-smart-ring.jpg"
-        ],
+        "image": "assets/images/products/framed/orbit-smart-ring (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1088,7 +974,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 999,
     "oldPrice": 1099,
-    "image": "assets/images/products/zenith-ultrabook.jpg",
+    "image": "assets/images/products/framed/zenith-ultrabook (Default).jpg",
     "shortDescription": "1.2kg ultrabook with a 2.8K OLED display, 16GB of memory, and all-day battery life.",
     "description": "Zenith 14 is the laptop you stop thinking about and just carry. The 2.8K OLED panel makes text look printed, sixteen gigabytes of memory and a fast NVMe drive keep thirty browser tabs honest, and the magnesium chassis lands at 1.2 kilograms. Fourteen hours of battery and fast charging over USB-C get you through the day and most of the next.",
     "features": [
@@ -1107,10 +993,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/zenith-ultrabook.jpg",
-        "gallery": [
-          "assets/images/products/zenith-ultrabook.jpg"
-        ],
+        "image": "assets/images/products/framed/zenith-ultrabook 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       },
@@ -1118,10 +1002,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/zenith-ultrabook.jpg",
-        "gallery": [
-          "assets/images/products/zenith-ultrabook.jpg"
-        ],
+        "image": "assets/images/products/framed/zenith-ultrabook (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -1129,10 +1011,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/zenith-ultrabook.jpg",
-        "gallery": [
-          "assets/images/products/zenith-ultrabook.jpg"
-        ],
+        "image": "assets/images/products/framed/zenith-ultrabook (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 1
       }
@@ -1144,7 +1024,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 429,
     "oldPrice": null,
-    "image": "assets/images/products/vista-ultrawide.jpg",
+    "image": "assets/images/products/framed/vista-ultrawide (Default).jpg",
     "shortDescription": "34-inch curved ultrawide with 1440p resolution, 144Hz refresh, and USB-C connectivity.",
     "description": "Vista 34 replaces two monitors and the seam between them. The 3440x1440 VA panel curves gently around your sightline, 144Hz with adaptive sync keeps motion clean whether you're gaming or scrubbing timelines, and a single USB-C cable carries video and 65W of laptop charging. Picture-by-picture splits it back into two inputs when you need both machines up.",
     "features": [
@@ -1163,10 +1043,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/vista-ultrawide.jpg",
-        "gallery": [
-          "assets/images/products/vista-ultrawide.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-ultrawide (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -1174,10 +1052,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/vista-ultrawide.jpg",
-        "gallery": [
-          "assets/images/products/vista-ultrawide.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-ultrawide (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -1185,10 +1061,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/vista-ultrawide.jpg",
-        "gallery": [
-          "assets/images/products/vista-ultrawide.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-ultrawide (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       }
@@ -1200,7 +1074,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 49,
     "oldPrice": null,
-    "image": "assets/images/products/glide-wireless-mouse.jpg",
+    "image": "assets/images/products/framed/glide-wireless-mouse (Default).jpg",
     "shortDescription": "Low-profile wireless mouse with silent switches and a 90-day rechargeable battery.",
     "description": "Glide is the mouse your wrist stops complaining about. A contoured low-profile shell keeps your hand in a neutral rest, silent switches spare the open-plan office, and the 4000 DPI sensor tracks on glass and wood alike. It pairs to three devices over Bluetooth or the 2.4GHz dongle and runs ninety days per USB-C charge.",
     "features": [
@@ -1219,10 +1093,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/glide-wireless-mouse.jpg",
-        "gallery": [
-          "assets/images/products/glide-wireless-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/glide-wireless-mouse 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 22
       },
@@ -1230,10 +1102,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/glide-wireless-mouse.jpg",
-        "gallery": [
-          "assets/images/products/glide-wireless-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/glide-wireless-mouse (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 22
       },
@@ -1241,10 +1111,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/glide-wireless-mouse.jpg",
-        "gallery": [
-          "assets/images/products/glide-wireless-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/glide-wireless-mouse  2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1256,7 +1124,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 119,
     "oldPrice": null,
-    "image": "assets/images/products/clarity-webcam.jpg",
+    "image": "assets/images/products/framed/clarity-webcam (Default).jpg",
     "shortDescription": "4K webcam with a large low-light sensor, auto-framing, and dual noise-reducing microphones.",
     "description": "Clarity ends the era of looking worse than you sound. A large 4K sensor holds detail in bad home-office light, auto-framing keeps you centred when you lean and gesture, and dual microphones cut the dishwasher out of your audio. A physical privacy shutter and a standard tripod thread round out the practical bits.",
     "features": [
@@ -1275,10 +1143,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/clarity-webcam.jpg",
-        "gallery": [
-          "assets/images/products/clarity-webcam.jpg"
-        ],
+        "image": "assets/images/products/framed/clarity-webcam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 12
       },
@@ -1286,10 +1152,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/clarity-webcam.jpg",
-        "gallery": [
-          "assets/images/products/clarity-webcam.jpg"
-        ],
+        "image": "assets/images/products/framed/clarity-webcam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -1297,10 +1161,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/clarity-webcam.jpg",
-        "gallery": [
-          "assets/images/products/clarity-webcam.jpg"
-        ],
+        "image": "assets/images/products/framed/clarity-webcam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       }
@@ -1312,7 +1174,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 39,
     "oldPrice": 49,
-    "image": "assets/images/products/elevate-laptop-stand.jpg",
+    "image": "assets/images/products/framed/elevate-laptop-stand (Default).jpg",
     "shortDescription": "Adjustable aluminium laptop stand that raises your screen to eye level with open airflow.",
     "description": "Elevate fixes your posture before your physio has to. Six height positions bring the screen up to eye level, the single-piece aluminium arm stays rigid under heavy typing, and the open frame keeps air moving under hot machines. It folds flat, weighs 800 grams, and slips into the same sleeve as your laptop.",
     "features": [
@@ -1331,10 +1193,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/elevate-laptop-stand.jpg",
-        "gallery": [
-          "assets/images/products/elevate-laptop-stand.jpg"
-        ],
+        "image": "assets/images/products/framed/elevate-laptop-stand (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 16
       },
@@ -1342,10 +1202,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/elevate-laptop-stand.jpg",
-        "gallery": [
-          "assets/images/products/elevate-laptop-stand.jpg"
-        ],
+        "image": "assets/images/products/framed/elevate-laptop-stand (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -1353,10 +1211,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/elevate-laptop-stand.jpg",
-        "gallery": [
-          "assets/images/products/elevate-laptop-stand.jpg"
-        ],
+        "image": "assets/images/products/framed/elevate-laptop-stand (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       }
@@ -1368,7 +1224,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 59.99,
     "oldPrice": null,
-    "image": "assets/images/products/nexus-usb-hub.jpg",
+    "image": "assets/images/products/framed/nexus-usb-hub (Default).jpg",
     "shortDescription": "8-in-1 USB-C hub with 4K HDMI, gigabit Ethernet, and 100W pass-through charging.",
     "description": "Nexus turns one port into a full desk. 4K60 HDMI, gigabit Ethernet, two USB-A ports and SD and microSD readers cover the daily essentials, while 100W pass-through keeps your laptop charging over the same cable. The aluminium shell doubles as a heatsink so sustained transfers don't throttle.",
     "features": [
@@ -1387,10 +1243,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/nexus-usb-hub.jpg",
-        "gallery": [
-          "assets/images/products/nexus-usb-hub.jpg"
-        ],
+        "image": "assets/images/products/framed/nexus-usb-hub (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 18
       },
@@ -1398,10 +1252,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/nexus-usb-hub.jpg",
-        "gallery": [
-          "assets/images/products/nexus-usb-hub.jpg"
-        ],
+        "image": "assets/images/products/framed/nexus-usb-hub (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 18
       },
@@ -1409,10 +1261,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/nexus-usb-hub.jpg",
-        "gallery": [
-          "assets/images/products/nexus-usb-hub.jpg"
-        ],
+        "image": "assets/images/products/framed/nexus-usb-hub (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1424,7 +1274,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 89,
     "oldPrice": null,
-    "image": "assets/images/products/sketchpad-tablet.jpg",
+    "image": "assets/images/products/framed/sketchpad-tablet (Default).jpg",
     "shortDescription": "10-inch drawing tablet with 8192 pressure levels and a battery-free tilt-aware pen.",
     "description": "SketchPad gets out of the way between your hand and the canvas. The battery-free pen reads 8192 pressure levels and 60 degrees of tilt, the 10x6-inch textured surface drags like real paper, and eight programmable keys keep undo and zoom under your off hand. It connects over USB-C and works with every major art application.",
     "features": [
@@ -1443,10 +1293,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/sketchpad-tablet.jpg",
-        "gallery": [
-          "assets/images/products/sketchpad-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/sketchpad-tablet (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -1454,10 +1302,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/sketchpad-tablet.jpg",
-        "gallery": [
-          "assets/images/products/sketchpad-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/sketchpad-tablet 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       },
@@ -1465,10 +1311,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/sketchpad-tablet.jpg",
-        "gallery": [
-          "assets/images/products/sketchpad-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/sketchpad-tablet (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       }
@@ -1480,7 +1324,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 449,
     "oldPrice": 499,
-    "image": "assets/images/products/slate-tablet.jpg",
+    "image": "assets/images/products/framed/slate-tablet (Default).jpg",
     "shortDescription": "11-inch tablet with a 120Hz 2K display, quad speakers, and low-latency stylus support.",
     "description": "Slate 11 is the tablet that earns a place beside your laptop rather than under it. The 2K display refreshes at 120Hz so sketching and scrolling feel immediate, quad speakers make it a legitimate small cinema, and the low-latency stylus and keyboard cover attach magnetically. Ten hours of mixed use and 128GB of storage handle a full working day.",
     "features": [
@@ -1499,10 +1343,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/slate-tablet.jpg",
-        "gallery": [
-          "assets/images/products/slate-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/slate-tablet (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -1510,10 +1352,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/slate-tablet.jpg",
-        "gallery": [
-          "assets/images/products/slate-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/slate-tablet (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -1521,10 +1361,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/slate-tablet.jpg",
-        "gallery": [
-          "assets/images/products/slate-tablet.jpg"
-        ],
+        "image": "assets/images/products/framed/slate-tablet (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       }
@@ -1536,7 +1374,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Computing",
     "price": 179,
     "oldPrice": null,
-    "image": "assets/images/products/vista-portable-monitor.jpg",
+    "image": "assets/images/products/framed/vista-portable-monitor (Default).jpg",
     "shortDescription": "15.6-inch 1080p portable monitor drawing power and video from one USB-C cable.",
     "description": "Vista Go gives your laptop a second screen wherever you open it. The 15.6-inch IPS panel matches your main display at 1080p, one USB-C cable carries power and picture both, and mini-HDMI covers consoles and cameras. It weighs 730 grams, and the folding cover props it at two angles and protects it in transit.",
     "features": [
@@ -1555,10 +1393,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-gray",
         "label": "Space Gray",
         "swatchHex": "#374151",
-        "image": "assets/images/products/vista-portable-monitor.jpg",
-        "gallery": [
-          "assets/images/products/vista-portable-monitor.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-portable-monitor (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -1566,10 +1402,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/vista-portable-monitor.jpg",
-        "gallery": [
-          "assets/images/products/vista-portable-monitor.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-portable-monitor (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -1577,10 +1411,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "anodized-blue",
         "label": "Anodized Blue",
         "swatchHex": "#1d4ed8",
-        "image": "assets/images/products/vista-portable-monitor.jpg",
-        "gallery": [
-          "assets/images/products/vista-portable-monitor.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-portable-monitor (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1592,7 +1424,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 499,
     "oldPrice": 599,
-    "image": "assets/images/products/skyline-drone.jpg",
+    "image": "assets/images/products/framed/skyline-drone (Default).jpg",
     "shortDescription": "Foldable 4K drone with a 3-axis gimbal, 34-minute flights, and 8km transmission range.",
     "description": "Skyline puts a stabilised camera anywhere you can point at the sky. The 3-axis gimbal holds 4K30 footage steady in a crosswind, GPS return-to-home and downward obstacle sensing look after the aircraft, and each battery is good for 34 minutes aloft. Folded, it is smaller than a water bottle and weighs under 249 grams.",
     "features": [
@@ -1611,10 +1443,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/skyline-drone.jpg",
-        "gallery": [
-          "assets/images/products/skyline-drone.jpg"
-        ],
+        "image": "assets/images/products/framed/skyline-drone (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -1622,10 +1452,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/skyline-drone.jpg",
-        "gallery": [
-          "assets/images/products/skyline-drone.jpg"
-        ],
+        "image": "assets/images/products/framed/skyline-drone (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -1633,10 +1461,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/skyline-drone.jpg",
-        "gallery": [
-          "assets/images/products/skyline-drone.jpg"
-        ],
+        "image": "assets/images/products/framed/skyline-drone (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 1
       }
@@ -1648,7 +1474,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 249,
     "oldPrice": null,
-    "image": "assets/images/products/venture-action-cam.jpg",
+    "image": "assets/images/products/framed/venture-action-cam (Default).jpg",
     "shortDescription": "Waterproof 5K action camera with horizon-locking stabilisation and dual touchscreens.",
     "description": "Venture is built for the moments you can't ask to repeat. 5K30 capture leaves room to crop, horizon-locking stabilisation keeps the ride watchable however the mount shakes, and front and rear touchscreens make framing yourself simple. It is waterproof to ten metres without a case and swaps batteries in seconds.",
     "features": [
@@ -1667,10 +1493,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/venture-action-cam.jpg",
-        "gallery": [
-          "assets/images/products/venture-action-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/venture-action-cam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -1678,10 +1502,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/venture-action-cam.jpg",
-        "gallery": [
-          "assets/images/products/venture-action-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/venture-action-cam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -1689,10 +1511,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/venture-action-cam.jpg",
-        "gallery": [
-          "assets/images/products/venture-action-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/venture-action-cam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       }
@@ -1704,7 +1524,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 129,
     "oldPrice": null,
-    "image": "assets/images/products/anchor-tripod.jpg",
+    "image": "assets/images/products/framed/anchor-tripod (Default).jpg",
     "shortDescription": "Carbon-fibre travel tripod that folds to 42cm and supports 8kg of camera kit.",
     "description": "Anchor holds still so your long exposures can. Carbon-fibre legs cut the weight to 1.1 kilograms without giving up an 8-kilogram load rating, twist locks deploy all four sections in seconds, and the ball head pans smoothly on a standard quick-release plate. A hook under the centre column takes ballast when the wind picks up.",
     "features": [
@@ -1723,10 +1543,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/anchor-tripod.jpg",
-        "gallery": [
-          "assets/images/products/anchor-tripod.jpg"
-        ],
+        "image": "assets/images/products/framed/anchor-tripod (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -1734,10 +1552,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/anchor-tripod.jpg",
-        "gallery": [
-          "assets/images/products/anchor-tripod.jpg"
-        ],
+        "image": "assets/images/products/framed/anchor-tripod (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -1745,10 +1561,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/anchor-tripod.jpg",
-        "gallery": [
-          "assets/images/products/anchor-tripod.jpg"
-        ],
+        "image": "assets/images/products/framed/anchor-tripod (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1760,7 +1574,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 219,
     "oldPrice": null,
-    "image": "assets/images/products/prime-lens-50.jpg",
+    "image": "assets/images/products/framed/prime-lens-50 (Default).jpg",
     "shortDescription": "Fast 50mm f/1.8 prime with silent autofocus and a seven-blade rounded aperture.",
     "description": "Prime 50mm is the lens that teaches you what your camera can actually do. The f/1.8 aperture pulls subjects off creamy backgrounds and keeps shutter speeds up after sunset, a stepping autofocus motor works fast and silently for video, and the seven-blade rounded diaphragm keeps highlights round. At 160 grams it stays on the camera and in the bag.",
     "features": [
@@ -1779,10 +1593,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/prime-lens-50.jpg",
-        "gallery": [
-          "assets/images/products/prime-lens-50.jpg"
-        ],
+        "image": "assets/images/products/framed/prime-lens-50 (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -1790,10 +1602,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/prime-lens-50.jpg",
-        "gallery": [
-          "assets/images/products/prime-lens-50.jpg"
-        ],
+        "image": "assets/images/products/framed/prime-lens-50 (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       },
@@ -1801,10 +1611,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/prime-lens-50.jpg",
-        "gallery": [
-          "assets/images/products/prime-lens-50.jpg"
-        ],
+        "image": "assets/images/products/framed/prime-lens-50 (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 2
       }
@@ -1816,7 +1624,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 99,
     "oldPrice": 119,
-    "image": "assets/images/products/flash-instant-camera.jpg",
+    "image": "assets/images/products/framed/flash-instant-camera (Default).jpg",
     "shortDescription": "Point-and-shoot instant camera that prints credit-card photos in under 90 seconds.",
     "description": "Flash brings the print back into the picture. Auto exposure and a built-in selfie mirror get the shot right the first time, the rechargeable battery covers about 100 prints per charge, and a macro mode handles close-ups down to 30 cm. Slide the film pack in, press the shutter, and hand someone a photo they can keep.",
     "features": [
@@ -1835,10 +1643,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/flash-instant-camera.jpg",
-        "gallery": [
-          "assets/images/products/flash-instant-camera.jpg"
-        ],
+        "image": "assets/images/products/framed/flash-instant-camera (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 13
       },
@@ -1846,10 +1652,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/flash-instant-camera.jpg",
-        "gallery": [
-          "assets/images/products/flash-instant-camera.jpg"
-        ],
+        "image": "assets/images/products/framed/flash-instant-camera (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -1857,10 +1661,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/flash-instant-camera.jpg",
-        "gallery": [
-          "assets/images/products/flash-instant-camera.jpg"
-        ],
+        "image": "assets/images/products/framed/flash-instant-camera (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       }
@@ -1872,7 +1674,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Photography",
     "price": 45,
     "oldPrice": null,
-    "image": "assets/images/products/halo-ring-light.jpg",
+    "image": "assets/images/products/framed/halo-ring-light (Default).jpg",
     "shortDescription": "10-inch ring light with extendable tripod, phone mount and three colour temperature modes.",
     "description": "Halo makes every call and clip look deliberately lit. Three colour modes from warm 3000K to daylight 6500K with 10 brightness steps dial in the exact look, and the tripod extends to 160 cm with a ball-head phone mount that rotates a full 360 degrees. USB power means it runs off a laptop, a power bank or the wall.",
     "features": [
@@ -1891,10 +1693,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/halo-ring-light.jpg",
-        "gallery": [
-          "assets/images/products/halo-ring-light.jpg"
-        ],
+        "image": "assets/images/products/framed/halo-ring-light (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 17
       },
@@ -1902,10 +1702,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "vintage-silver",
         "label": "Vintage Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/halo-ring-light.jpg",
-        "gallery": [
-          "assets/images/products/halo-ring-light.jpg"
-        ],
+        "image": "assets/images/products/framed/halo-ring-light (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 16
       },
@@ -1913,10 +1711,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "crimson-accent",
         "label": "Crimson Accent",
         "swatchHex": "#991b1b",
-        "image": "assets/images/products/halo-ring-light.jpg",
-        "gallery": [
-          "assets/images/products/halo-ring-light.jpg"
-        ],
+        "image": "assets/images/products/framed/halo-ring-light (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -1928,7 +1724,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Gaming",
     "price": 64.99,
     "oldPrice": null,
-    "image": "assets/images/products/apex-controller.jpg",
+    "image": "assets/images/products/framed/apex-controller (Default).jpg",
     "shortDescription": "Low-latency wireless controller with hall-effect sticks and remappable back buttons.",
     "description": "Apex is the controller you stop thinking about mid-match. Hall-effect thumbsticks eliminate drift for good, two remappable back buttons keep your thumbs on the sticks, and the 2.4GHz link holds latency under 8 ms across PC and mobile. A 20-hour battery with USB-C fast charging means it outlasts the session.",
     "features": [
@@ -1947,10 +1743,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cyber-black",
         "label": "Cyber Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/apex-controller.jpg",
-        "gallery": [
-          "assets/images/products/apex-controller.jpg"
-        ],
+        "image": "assets/images/products/framed/apex-controller (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 15
       },
@@ -1958,10 +1752,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "neon-purple",
         "label": "Neon Purple",
         "swatchHex": "#7e22ce",
-        "image": "assets/images/products/apex-controller.jpg",
-        "gallery": [
-          "assets/images/products/apex-controller.jpg"
-        ],
+        "image": "assets/images/products/framed/apex-controller (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -1969,10 +1761,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-white",
         "label": "Electric White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/apex-controller.jpg",
-        "gallery": [
-          "assets/images/products/apex-controller.jpg"
-        ],
+        "image": "assets/images/products/framed/apex-controller (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       }
@@ -1984,7 +1774,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Gaming",
     "price": 59,
     "oldPrice": 79,
-    "image": "assets/images/products/viper-gaming-mouse.jpg",
+    "image": "assets/images/products/framed/viper-gaming-mouse (Default).jpg",
     "shortDescription": "Lightweight 26,000 DPI gaming mouse with optical switches and eight programmable buttons.",
     "description": "Viper is built for flicks that land. A 26,000 DPI optical sensor tracks at 650 IPS, optical switches fire in 0.2 ms without double-click wear, and the 58-gram shell keeps long sessions light on the wrist. Onboard memory stores five profiles so your settings follow you to any machine.",
     "features": [
@@ -2003,10 +1793,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cyber-black",
         "label": "Cyber Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/viper-gaming-mouse.jpg",
-        "gallery": [
-          "assets/images/products/viper-gaming-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/viper-gaming-mouse (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 18
       },
@@ -2014,10 +1802,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "neon-purple",
         "label": "Neon Purple",
         "swatchHex": "#7e22ce",
-        "image": "assets/images/products/viper-gaming-mouse.jpg",
-        "gallery": [
-          "assets/images/products/viper-gaming-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/viper-gaming-mouse (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -2025,10 +1811,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-white",
         "label": "Electric White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/viper-gaming-mouse.jpg",
-        "gallery": [
-          "assets/images/products/viper-gaming-mouse.jpg"
-        ],
+        "image": "assets/images/products/framed/viper-gaming-mouse (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       }
@@ -2040,7 +1824,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Gaming",
     "price": 289,
     "oldPrice": 349,
-    "image": "assets/images/products/throne-gaming-chair.jpg",
+    "image": "assets/images/products/framed/throne-gaming-chair (Default).jpg",
     "shortDescription": "Ergonomic gaming chair with 4D armrests, adjustable lumbar and a 165-degree recline.",
     "description": "Throne is built for the eighth hour, not the first. Adjustable lumbar support and a cold-cure foam seat hold posture through long sessions, while 4D armrests, a 165-degree recline and a class-4 gas lift adjust to any desk and any break. The steel frame is rated to 150 kg and covered by a five-year warranty.",
     "features": [
@@ -2059,10 +1843,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cyber-black",
         "label": "Cyber Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/throne-gaming-chair.jpg",
-        "gallery": [
-          "assets/images/products/throne-gaming-chair.jpg"
-        ],
+        "image": "assets/images/products/framed/throne-gaming-chair (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -2070,10 +1852,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "neon-purple",
         "label": "Neon Purple",
         "swatchHex": "#7e22ce",
-        "image": "assets/images/products/throne-gaming-chair.jpg",
-        "gallery": [
-          "assets/images/products/throne-gaming-chair.jpg"
-        ],
+        "image": "assets/images/products/framed/throne-gaming-chair 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 1
       },
@@ -2081,10 +1861,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-white",
         "label": "Electric White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/throne-gaming-chair.jpg",
-        "gallery": [
-          "assets/images/products/throne-gaming-chair.jpg"
-        ],
+        "image": "assets/images/products/framed/throne-gaming-chair 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 1
       }
@@ -2096,7 +1874,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Gaming",
     "price": 34.99,
     "oldPrice": null,
-    "image": "assets/images/products/grid-rgb-mousepad.jpg",
+    "image": "assets/images/products/framed/grid-rgb-mousepad (Default).jpg",
     "shortDescription": "900 x 400 mm desk-size mousepad with 14-zone edge lighting and a non-slip rubber base.",
     "description": "Grid turns the whole desk into playing surface. The 900 x 400 mm micro-woven cloth is tuned for both speed and control, 14 lighting zones around the edge cycle through 12 preset modes over a single USB cable, and stitched anti-fray edges survive the daily grind. A full rubber base keeps it planted through the most frantic rounds.",
     "features": [
@@ -2115,10 +1893,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cyber-black",
         "label": "Cyber Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/grid-rgb-mousepad.jpg",
-        "gallery": [
-          "assets/images/products/grid-rgb-mousepad.jpg"
-        ],
+        "image": "assets/images/products/framed/grid-rgb-mousepad (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 20
       },
@@ -2126,10 +1902,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "neon-purple",
         "label": "Neon Purple",
         "swatchHex": "#7e22ce",
-        "image": "assets/images/products/grid-rgb-mousepad.jpg",
-        "gallery": [
-          "assets/images/products/grid-rgb-mousepad.jpg"
-        ],
+        "image": "assets/images/products/framed/grid-rgb-mousepad (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -2137,10 +1911,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-white",
         "label": "Electric White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/grid-rgb-mousepad.jpg",
-        "gallery": [
-          "assets/images/products/grid-rgb-mousepad.jpg"
-        ],
+        "image": "assets/images/products/framed/grid-rgb-mousepad (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       }
@@ -2152,7 +1924,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Gaming",
     "price": 79,
     "oldPrice": null,
-    "image": "assets/images/products/arcade-retro-console.jpg",
+    "image": "assets/images/products/framed/arcade-retro-console (Default).jpg",
     "shortDescription": "Plug-and-play retro console with two wireless gamepads and 200 built-in classic titles.",
     "description": "Arcade is a rainy Saturday in a box. Two included 2.4GHz wireless gamepads make couch co-op instant, 200 built-in retro titles load straight from the menu, and HDMI output upscales everything to clean 1080p with optional scanline filters. Save states mean you can finally finish the ones that beat you as a kid.",
     "features": [
@@ -2171,10 +1943,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "cyber-black",
         "label": "Cyber Black",
         "swatchHex": "#09090b",
-        "image": "assets/images/products/arcade-retro-console.jpg",
-        "gallery": [
-          "assets/images/products/arcade-retro-console.jpg"
-        ],
+        "image": "assets/images/products/framed/arcade-retro-console (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -2182,10 +1952,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "neon-purple",
         "label": "Neon Purple",
         "swatchHex": "#7e22ce",
-        "image": "assets/images/products/arcade-retro-console.jpg",
-        "gallery": [
-          "assets/images/products/arcade-retro-console.jpg"
-        ],
+        "image": "assets/images/products/framed/arcade-retro-console 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -2193,10 +1961,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "electric-white",
         "label": "Electric White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/arcade-retro-console.jpg",
-        "gallery": [
-          "assets/images/products/arcade-retro-console.jpg"
-        ],
+        "image": "assets/images/products/framed/arcade-retro-console 1.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2208,7 +1974,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 49.99,
     "oldPrice": null,
-    "image": "assets/images/products/glow-smart-bulbs.jpg",
+    "image": "assets/images/products/framed/glow-smart-bulbs (Default).jpg",
     "shortDescription": "Four WiFi colour bulbs with 16 million shades, schedules and voice assistant control.",
     "description": "Glow makes lighting the easiest room upgrade in the house. Each 800-lumen bulb dials through 16 million colours and tunable whites from 2200K to 6500K, works over plain 2.4GHz WiFi with no hub, and follows schedules, scenes and sunrise routines from the app. Voice control through the major assistants is set up in minutes.",
     "features": [
@@ -2227,10 +1993,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/glow-smart-bulbs.jpg",
-        "gallery": [
-          "assets/images/products/glow-smart-bulbs.jpg"
-        ],
+        "image": "assets/images/products/framed/glow-smart-bulbs (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 19
       },
@@ -2238,10 +2002,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/glow-smart-bulbs.jpg",
-        "gallery": [
-          "assets/images/products/glow-smart-bulbs.jpg"
-        ],
+        "image": "assets/images/products/framed/glow-smart-bulbs (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 18
       },
@@ -2249,10 +2011,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/glow-smart-bulbs.jpg",
-        "gallery": [
-          "assets/images/products/glow-smart-bulbs.jpg"
-        ],
+        "image": "assets/images/products/framed/glow-smart-bulbs (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2264,7 +2024,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 89,
     "oldPrice": 109,
-    "image": "assets/images/products/haven-smart-speaker.jpg",
+    "image": "assets/images/products/framed/haven-smart-speaker (Default).jpg",
     "shortDescription": "Compact smart speaker with 360-degree sound, far-field mics and a physical mute switch.",
     "description": "Haven fills the room without dominating the shelf. A 360-degree driver arrangement pushes clear sound to every corner, six far-field microphones catch requests over the music, and multi-room pairing links speakers across the house. A physical mic-off switch keeps quiet time genuinely quiet.",
     "features": [
@@ -2283,10 +2043,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/haven-smart-speaker.jpg",
-        "gallery": [
-          "assets/images/products/haven-smart-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/haven-smart-speaker (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -2294,10 +2052,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/haven-smart-speaker.jpg",
-        "gallery": [
-          "assets/images/products/haven-smart-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/haven-smart-speaker 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -2305,10 +2061,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/haven-smart-speaker.jpg",
-        "gallery": [
-          "assets/images/products/haven-smart-speaker.jpg"
-        ],
+        "image": "assets/images/products/framed/haven-smart-speaker 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       }
@@ -2320,7 +2074,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 79.99,
     "oldPrice": null,
-    "image": "assets/images/products/sentry-security-cam.jpg",
+    "image": "assets/images/products/framed/sentry-security-cam (Default).jpg",
     "shortDescription": "Indoor-outdoor 2K security camera with colour night vision and local microSD storage.",
     "description": "Sentry watches so you can stop checking. The 2K sensor with colour night vision keeps detail after dark, on-device person and vehicle detection cuts the false alerts, and an IP65 shell handles rain, dust and freezing mornings. Clips save to a local microSD card, so there is no subscription between you and your own footage.",
     "features": [
@@ -2339,10 +2093,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/sentry-security-cam.jpg",
-        "gallery": [
-          "assets/images/products/sentry-security-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/sentry-security-cam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 12
       },
@@ -2350,10 +2102,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/sentry-security-cam.jpg",
-        "gallery": [
-          "assets/images/products/sentry-security-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/sentry-security-cam 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -2361,10 +2111,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/sentry-security-cam.jpg",
-        "gallery": [
-          "assets/images/products/sentry-security-cam.jpg"
-        ],
+        "image": "assets/images/products/framed/sentry-security-cam (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       }
@@ -2376,7 +2124,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 299,
     "oldPrice": 379,
-    "image": "assets/images/products/sweep-robot-vacuum.jpg",
+    "image": "assets/images/products/framed/sweep-robot-vacuum (Default).jpg",
     "shortDescription": "Laser-mapping robot vacuum with 4000Pa suction, mopping and a self-emptying dock.",
     "description": "Sweep handles the floors so the weekend stays yours. Laser navigation maps every room for no-go zones and targeted cleans, 4000Pa suction lifts pet hair out of carpet, and the swappable mop plate takes care of hard floors on the same run. The self-emptying dock holds seven weeks of debris before it needs a thought.",
     "features": [
@@ -2395,10 +2143,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/sweep-robot-vacuum.jpg",
-        "gallery": [
-          "assets/images/products/sweep-robot-vacuum.jpg"
-        ],
+        "image": "assets/images/products/framed/sweep-robot-vacuum 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -2406,10 +2152,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/sweep-robot-vacuum.jpg",
-        "gallery": [
-          "assets/images/products/sweep-robot-vacuum.jpg"
-        ],
+        "image": "assets/images/products/framed/sweep-robot-vacuum (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -2417,10 +2161,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/sweep-robot-vacuum.jpg",
-        "gallery": [
-          "assets/images/products/sweep-robot-vacuum.jpg"
-        ],
+        "image": "assets/images/products/framed/sweep-robot-vacuum (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2432,7 +2174,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 129,
     "oldPrice": null,
-    "image": "assets/images/products/vista-smart-display.jpg",
+    "image": "assets/images/products/framed/vista-smart-display (Default).jpg",
     "shortDescription": "8-inch smart display for video calls, recipes, camera feeds and whole-home control.",
     "description": "Vista puts the whole house on one countertop screen. The 8-inch HD touchscreen handles video calls through a 5MP auto-framing camera, steps through recipes hands-free, and pulls up compatible doorbells and cameras on request. When idle it becomes a photo frame with a light sensor that matches the room.",
     "features": [
@@ -2451,10 +2193,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/vista-smart-display.jpg",
-        "gallery": [
-          "assets/images/products/vista-smart-display.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-smart-display (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       },
@@ -2462,10 +2202,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/vista-smart-display.jpg",
-        "gallery": [
-          "assets/images/products/vista-smart-display.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-smart-display (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       },
@@ -2473,10 +2211,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/vista-smart-display.jpg",
-        "gallery": [
-          "assets/images/products/vista-smart-display.jpg"
-        ],
+        "image": "assets/images/products/framed/vista-smart-display (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       }
@@ -2488,7 +2224,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Smart Home",
     "price": 149,
     "oldPrice": null,
-    "image": "assets/images/products/guard-video-doorbell.jpg",
+    "image": "assets/images/products/framed/guard-video-doorbell (Default).jpg",
     "shortDescription": "2K video doorbell with a head-to-toe view, two-way talk and package detection.",
     "description": "Guard answers the door whether you are home or not. A 2K sensor with a head-to-toe vertical view shows visitors and parcels alike, two-way talk with preset quick replies handles couriers from anywhere, and package detection pings the moment a box lands. Wired or battery installation takes about fifteen minutes either way.",
     "features": [
@@ -2507,10 +2243,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "glacier-white",
         "label": "Glacier White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/guard-video-doorbell.jpg",
-        "gallery": [
-          "assets/images/products/guard-video-doorbell.jpg"
-        ],
+        "image": "assets/images/products/framed/guard-video-doorbell 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       },
@@ -2518,10 +2252,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "space-black",
         "label": "Space Black",
         "swatchHex": "#18181b",
-        "image": "assets/images/products/guard-video-doorbell.jpg",
-        "gallery": [
-          "assets/images/products/guard-video-doorbell.jpg"
-        ],
+        "image": "assets/images/products/framed/guard-video-doorbell (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 5
       },
@@ -2529,10 +2261,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-gray",
         "label": "Slate Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/guard-video-doorbell.jpg",
-        "gallery": [
-          "assets/images/products/guard-video-doorbell.jpg"
-        ],
+        "image": "assets/images/products/framed/guard-video-doorbell (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       }
@@ -2544,7 +2274,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Power & Charging",
     "price": 49.99,
     "oldPrice": null,
-    "image": "assets/images/products/surge-power-bank.jpg",
+    "image": "assets/images/products/framed/surge-power-bank (Default).jpg",
     "shortDescription": "20,000mAh power bank with 65W USB-C output that charges laptops and phones alike.",
     "description": "Surge is the difference between an outlet hunt and a working flight. The 20,000mAh cell delivers 65W over USB-C, enough to fast-charge a laptop or take a phone to half in under 25 minutes, and three ports keep tablets and earbuds topped up at the same time. A digital display shows the exact percentage left, not a guess in four dots.",
     "features": [
@@ -2563,10 +2293,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/surge-power-bank.jpg",
-        "gallery": [
-          "assets/images/products/surge-power-bank.jpg"
-        ],
+        "image": "assets/images/products/framed/surge-power-bank 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 21
       },
@@ -2574,10 +2302,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "pure-white",
         "label": "Pure White",
         "swatchHex": "#ffffff",
-        "image": "assets/images/products/surge-power-bank.jpg",
-        "gallery": [
-          "assets/images/products/surge-power-bank.jpg"
-        ],
+        "image": "assets/images/products/framed/surge-power-bank (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 20
       },
@@ -2585,10 +2311,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "gunmetal-blue",
         "label": "Gunmetal Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/surge-power-bank.jpg",
-        "gallery": [
-          "assets/images/products/surge-power-bank.jpg"
-        ],
+        "image": "assets/images/products/framed/surge-power-bank 1.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2600,7 +2324,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Power & Charging",
     "price": 29.99,
     "oldPrice": 39.99,
-    "image": "assets/images/products/float-wireless-charger.jpg",
+    "image": "assets/images/products/framed/float-wireless-charger (Default).jpg",
     "shortDescription": "Slim 15W wireless charging pad that works through phone cases up to 5 mm thick.",
     "description": "Float removes the last cable from the nightstand. It delivers up to 15W to compatible phones and 5W to earbuds, charges through cases up to 5 mm thick, and a soft-glow indicator dims at night instead of lighting the ceiling. Foreign-object detection and thermal control keep the overnight charge boring, exactly as it should be.",
     "features": [
@@ -2619,10 +2343,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/float-wireless-charger.jpg",
-        "gallery": [
-          "assets/images/products/float-wireless-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/float-wireless-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 23
       },
@@ -2630,10 +2352,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "pure-white",
         "label": "Pure White",
         "swatchHex": "#ffffff",
-        "image": "assets/images/products/float-wireless-charger.jpg",
-        "gallery": [
-          "assets/images/products/float-wireless-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/float-wireless-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -2641,10 +2361,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "gunmetal-blue",
         "label": "Gunmetal Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/float-wireless-charger.jpg",
-        "gallery": [
-          "assets/images/products/float-wireless-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/float-wireless-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       }
@@ -2656,7 +2374,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Power & Charging",
     "price": 44.99,
     "oldPrice": null,
-    "image": "assets/images/products/spark-gan-charger.jpg",
+    "image": "assets/images/products/framed/spark-gan-charger (Default).jpg",
     "shortDescription": "Pocket-size 65W GaN wall charger with two USB-C ports, one USB-A and foldable prongs.",
     "description": "Spark replaces the laptop brick and the drawer of cubes behind it. Gallium nitride internals push 65W through a charger half the size of a standard laptop adapter, two USB-C ports and a USB-A share the load intelligently, and foldable prongs keep it flat in a bag pocket. One charger covers the laptop, the phone and the earbuds.",
     "features": [
@@ -2675,10 +2393,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/spark-gan-charger.jpg",
-        "gallery": [
-          "assets/images/products/spark-gan-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/spark-gan-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 15
       },
@@ -2686,10 +2402,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "pure-white",
         "label": "Pure White",
         "swatchHex": "#ffffff",
-        "image": "assets/images/products/spark-gan-charger.jpg",
-        "gallery": [
-          "assets/images/products/spark-gan-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/spark-gan-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -2697,10 +2411,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "gunmetal-blue",
         "label": "Gunmetal Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/spark-gan-charger.jpg",
-        "gallery": [
-          "assets/images/products/spark-gan-charger.jpg"
-        ],
+        "image": "assets/images/products/framed/spark-gan-charger (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 7
       }
@@ -2712,7 +2424,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Power & Charging",
     "price": 24.99,
     "oldPrice": null,
-    "image": "assets/images/products/tether-braided-cables.jpg",
+    "image": "assets/images/products/framed/tether-braided-cables (Default).jpg",
     "shortDescription": "Three braided USB-C cables in 1m, 2m and 3m lengths, all rated for 100W charging.",
     "description": "Tether ends the daily hunt for the good cable. Each of the three lengths — 1m for the desk, 2m for the sofa, 3m for the awkward outlet — carries 100W charging and 480Mbps data through a double-braided nylon jacket. A 30,000-bend rating and reinforced strain relief mean the fray never starts.",
     "features": [
@@ -2731,10 +2443,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#0f172a",
-        "image": "assets/images/products/tether-braided-cables.jpg",
-        "gallery": [
-          "assets/images/products/tether-braided-cables.jpg"
-        ],
+        "image": "assets/images/products/framed/tether-braided-cables (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 24
       },
@@ -2742,10 +2452,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "pure-white",
         "label": "Pure White",
         "swatchHex": "#ffffff",
-        "image": "assets/images/products/tether-braided-cables.jpg",
-        "gallery": [
-          "assets/images/products/tether-braided-cables.jpg"
-        ],
+        "image": "assets/images/products/framed/tether-braided-cables (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 24
       },
@@ -2753,10 +2461,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "gunmetal-blue",
         "label": "Gunmetal Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/tether-braided-cables.jpg",
-        "gallery": [
-          "assets/images/products/tether-braided-cables.jpg"
-        ],
+        "image": "assets/images/products/framed/tether-braided-cables (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2768,7 +2474,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Storage",
     "price": 119,
     "oldPrice": 149,
-    "image": "assets/images/products/vault-external-ssd.jpg",
+    "image": "assets/images/products/framed/vault-external-ssd (Default).jpg",
     "shortDescription": "Palm-size 1TB external SSD with 1,050MB/s reads and hardware AES-256 encryption.",
     "description": "Vault moves a project library in the time coffee takes to brew. Reads up to 1,050MB/s and writes to 1,000MB/s over USB-C 3.2, hardware AES-256 encryption locks the drive itself rather than the software around it, and a rubberised shell shrugs off two-metre drops. Cables for USB-C and USB-A ship in the box, so it works everywhere already.",
     "features": [
@@ -2787,10 +2493,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/vault-external-ssd.jpg",
-        "gallery": [
-          "assets/images/products/vault-external-ssd.jpg"
-        ],
+        "image": "assets/images/products/framed/vault-external-ssd (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 13
       },
@@ -2798,10 +2502,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "metallic-silver",
         "label": "Metallic Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/vault-external-ssd.jpg",
-        "gallery": [
-          "assets/images/products/vault-external-ssd.jpg"
-        ],
+        "image": "assets/images/products/framed/vault-external-ssd 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -2809,10 +2511,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "ruby-red",
         "label": "Ruby Red",
         "swatchHex": "#b91c1c",
-        "image": "assets/images/products/vault-external-ssd.jpg",
-        "gallery": [
-          "assets/images/products/vault-external-ssd.jpg"
-        ],
+        "image": "assets/images/products/framed/vault-external-ssd 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       }
@@ -2824,7 +2524,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Storage",
     "price": 32,
     "oldPrice": null,
-    "image": "assets/images/products/swift-microsd.jpg",
+    "image": "assets/images/products/framed/swift-microsd (Default).jpg",
     "shortDescription": "256GB microSD with 160MB/s reads, A2 app rating and a full-size adapter included.",
     "description": "Swift keeps cameras, drones and handhelds out of the storage-full warning. Reads up to 160MB/s and V30 sustained writes handle 4K recording without dropped frames, while the A2 rating keeps apps on handheld consoles feeling installed rather than streamed. It is waterproof, temperature-proof and X-ray-proof, with a full-size adapter in the box.",
     "features": [
@@ -2843,10 +2543,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/swift-microsd.jpg",
-        "gallery": [
-          "assets/images/products/swift-microsd.jpg"
-        ],
+        "image": "assets/images/products/framed/swift-microsd (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 23
       },
@@ -2854,10 +2552,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "metallic-silver",
         "label": "Metallic Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/swift-microsd.jpg",
-        "gallery": [
-          "assets/images/products/swift-microsd.jpg"
-        ],
+        "image": "assets/images/products/framed/swift-microsd (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 12
       },
@@ -2865,10 +2561,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "ruby-red",
         "label": "Ruby Red",
         "swatchHex": "#b91c1c",
-        "image": "assets/images/products/swift-microsd.jpg",
-        "gallery": [
-          "assets/images/products/swift-microsd.jpg"
-        ],
+        "image": "assets/images/products/framed/swift-microsd (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       }
@@ -2880,7 +2574,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Storage",
     "price": 19.99,
     "oldPrice": null,
-    "image": "assets/images/products/keychain-flash-drive.jpg",
+    "image": "assets/images/products/framed/keychain-flash-drive (Default).jpg",
     "shortDescription": "128GB USB 3.2 flash drive in a capless zinc-alloy shell that clips onto your keys.",
     "description": "Keychain is the backup that is always in your pocket. The 128GB drive reads at 150MB/s over USB 3.2, the one-piece zinc-alloy body has no cap to lose, and the loop clips straight onto a keyring or lanyard. Plug it in anywhere and it simply mounts — no software, no fuss.",
     "features": [
@@ -2899,10 +2593,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "onyx-black",
         "label": "Onyx Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/keychain-flash-drive.jpg",
-        "gallery": [
-          "assets/images/products/keychain-flash-drive.jpg"
-        ],
+        "image": "assets/images/products/framed/keychain-flash-drive (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -2910,10 +2602,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "metallic-silver",
         "label": "Metallic Silver",
         "swatchHex": "#94a3b8",
-        "image": "assets/images/products/keychain-flash-drive.jpg",
-        "gallery": [
-          "assets/images/products/keychain-flash-drive.jpg"
-        ],
+        "image": "assets/images/products/framed/keychain-flash-drive 1.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       },
@@ -2921,10 +2611,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "ruby-red",
         "label": "Ruby Red",
         "swatchHex": "#b91c1c",
-        "image": "assets/images/products/keychain-flash-drive.jpg",
-        "gallery": [
-          "assets/images/products/keychain-flash-drive.jpg"
-        ],
+        "image": "assets/images/products/framed/keychain-flash-drive 2.jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -2936,7 +2624,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Networking",
     "price": 159,
     "oldPrice": null,
-    "image": "assets/images/products/lattice-router.jpg",
+    "image": "assets/images/products/framed/lattice-router (Default).jpg",
     "shortDescription": "Dual-band WiFi 6 router with 3,000Mbps throughput and coverage for 2,500 sq ft.",
     "description": "Lattice is the upgrade the whole household notices at once. WiFi 6 pushes a combined 3,000Mbps across both bands, OFDMA and MU-MIMO keep 60-plus devices from stepping on each other, and four gigabit LAN ports handle the wired essentials. Built-in parental controls and a guest network run from a two-minute app setup.",
     "features": [
@@ -2955,10 +2643,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/lattice-router.jpg",
-        "gallery": [
-          "assets/images/products/lattice-router.jpg"
-        ],
+        "image": "assets/images/products/framed/lattice-router (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 8
       },
@@ -2966,10 +2652,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/lattice-router.jpg",
-        "gallery": [
-          "assets/images/products/lattice-router.jpg"
-        ],
+        "image": "assets/images/products/framed/lattice-router 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       },
@@ -2977,10 +2661,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "titanium-gray",
         "label": "Titanium Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/lattice-router.jpg",
-        "gallery": [
-          "assets/images/products/lattice-router.jpg"
-        ],
+        "image": "assets/images/products/framed/lattice-router (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 4
       }
@@ -2992,7 +2674,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Networking",
     "price": 279,
     "oldPrice": 329,
-    "image": "assets/images/products/weave-mesh-kit.jpg",
+    "image": "assets/images/products/framed/weave-mesh-kit (Default).jpg",
     "shortDescription": "Three-node WiFi 6 mesh system covering 6,000 sq ft with one seamless network.",
     "description": "Weave replaces dead zones with one name and one password everywhere. Three WiFi 6 nodes blanket up to 6,000 square feet, a dedicated backhaul band keeps speeds honest at the far end of the house, and roaming hand-off is fast enough that video calls never notice the switch. Each node adds two gigabit Ethernet ports wherever you place it.",
     "features": [
@@ -3011,10 +2693,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "polar-white",
         "label": "Polar White",
         "swatchHex": "#f8fafc",
-        "image": "assets/images/products/weave-mesh-kit.jpg",
-        "gallery": [
-          "assets/images/products/weave-mesh-kit.jpg"
-        ],
+        "image": "assets/images/products/framed/weave-mesh-kit (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 6
       },
@@ -3022,10 +2702,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "stealth-black",
         "label": "Stealth Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/weave-mesh-kit.jpg",
-        "gallery": [
-          "assets/images/products/weave-mesh-kit.jpg"
-        ],
+        "image": "assets/images/products/framed/weave-mesh-kit 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       },
@@ -3033,10 +2711,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "titanium-gray",
         "label": "Titanium Gray",
         "swatchHex": "#475569",
-        "image": "assets/images/products/weave-mesh-kit.jpg",
-        "gallery": [
-          "assets/images/products/weave-mesh-kit.jpg"
-        ],
+        "image": "assets/images/products/framed/weave-mesh-kit (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 3
       }
@@ -3048,7 +2724,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Accessories",
     "price": 139,
     "oldPrice": null,
-    "image": "assets/images/products/page-e-reader.jpg",
+    "image": "assets/images/products/framed/page-e-reader (Default).jpg",
     "shortDescription": "6.8-inch glare-free e-reader with warm adjustable light and weeks of battery life.",
     "description": "Page reads like paper and packs like a paperback. The 6.8-inch 300ppi e-ink display stays readable in direct sun, the front light shifts from cool white to warm amber for night chapters, and 16GB holds thousands of titles. With an IPX8 waterproof rating and up to six weeks per charge, the bath, the beach and the long trip are all fair territory.",
     "features": [
@@ -3067,10 +2743,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "classic-black",
         "label": "Classic Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/page-e-reader.jpg",
-        "gallery": [
-          "assets/images/products/page-e-reader.jpg"
-        ],
+        "image": "assets/images/products/framed/page-e-reader (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 11
       },
@@ -3078,10 +2752,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "amber-tortoise",
         "label": "Amber Tortoise",
         "swatchHex": "#92400e",
-        "image": "assets/images/products/page-e-reader.jpg",
-        "gallery": [
-          "assets/images/products/page-e-reader.jpg"
-        ],
+        "image": "assets/images/products/framed/page-e-reader 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -3089,10 +2761,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-blue",
         "label": "Slate Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/page-e-reader.jpg",
-        "gallery": [
-          "assets/images/products/page-e-reader.jpg"
-        ],
+        "image": "assets/images/products/framed/page-e-reader (Default).jpg",
+        "gallery": [],
         "inStock": false,
         "stockCount": 0
       }
@@ -3104,7 +2774,7 @@ window.NovaCart = window.NovaCart || {};
     "category": "Accessories",
     "price": 24,
     "oldPrice": null,
-    "image": "assets/images/products/terrain-desk-mat.jpg",
+    "image": "assets/images/products/framed/terrain-desk-mat (Default).jpg",
     "shortDescription": "900 x 400 mm vegan-leather desk mat that protects the desk and quiets the keyboard.",
     "description": "Terrain gives the desk a finished look in ten seconds flat. The 900 x 400 mm vegan-leather surface tracks a mouse cleanly, softens keyboard sound and wipes clean with a damp cloth, while the non-slip suede base keeps it exactly where you put it. Double-stitched edges keep it flat and tidy for years, not months.",
     "features": [
@@ -3123,10 +2793,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "classic-black",
         "label": "Classic Black",
         "swatchHex": "#111827",
-        "image": "assets/images/products/terrain-desk-mat.jpg",
-        "gallery": [
-          "assets/images/products/terrain-desk-mat.jpg"
-        ],
+        "image": "assets/images/products/framed/terrain-desk-mat 1.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 20
       },
@@ -3134,10 +2802,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "amber-tortoise",
         "label": "Amber Tortoise",
         "swatchHex": "#92400e",
-        "image": "assets/images/products/terrain-desk-mat.jpg",
-        "gallery": [
-          "assets/images/products/terrain-desk-mat.jpg"
-        ],
+        "image": "assets/images/products/framed/terrain-desk-mat 2.jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 10
       },
@@ -3145,10 +2811,8 @@ window.NovaCart = window.NovaCart || {};
         "id": "slate-blue",
         "label": "Slate Blue",
         "swatchHex": "#334155",
-        "image": "assets/images/products/terrain-desk-mat.jpg",
-        "gallery": [
-          "assets/images/products/terrain-desk-mat.jpg"
-        ],
+        "image": "assets/images/products/framed/terrain-desk-mat (Default).jpg",
+        "gallery": [],
         "inStock": true,
         "stockCount": 9
       }
