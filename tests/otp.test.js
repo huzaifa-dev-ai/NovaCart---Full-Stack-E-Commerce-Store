@@ -50,7 +50,31 @@ const api = async (p, body) => {
   check("  no link is returned", !asked.json.devResetUrl);
 
   let u = await User.findForOtp(email);
-  check("a code was minted", !!u.resetOtp);
+  check("a code was minted", !!u.resetOtp,
+    asked.status === 429 ? "rate-limited (429)" : "nothing stored on the account");
+
+  // The forgot-password limiter is shared with the auth-recovery and mail
+  // suites, so by the time `npm test` reaches this one the window can already
+  // be spent. Without this guard every later assertion dereferences null and
+  // the run dies with a libuv assertion instead of saying what went wrong.
+  if (!u.resetOtp) {
+    console.log(
+      "\n  No code was minted, so the rest of this suite cannot run." +
+      (asked.status === 429
+        ? "\n  The server rate-limited the request. Restart it to reset the counters,"
+        : "\n  Check the server is pointed at the same MONGODB_URI as this test,") +
+      "\n  then run this suite on its own:  npm run test:otp\n"
+    );
+    console.log("=".repeat(56));
+    console.log("  " + pass + " passed, " + fail + " failed");
+    failures.forEach((f) => console.log("    x " + f));
+    console.log("=".repeat(56) + "\n");
+    await User.deleteOne({ email });
+    await mongoose.disconnect();
+    process.exitCode = 1;
+    return;
+  }
+
   check("  stored as a sha256 hash, not digits",
     u.resetOtp.length === 64 && /^[a-f0-9]+$/.test(u.resetOtp), u.resetOtp.slice(0, 12));
   check("  expires in 10 minutes",
@@ -196,5 +220,5 @@ const api = async (p, body) => {
   console.log("  " + pass + " passed, " + fail + " failed");
   failures.forEach((f) => console.log("    x " + f));
   console.log("=".repeat(56) + "\n");
-  process.exit(fail ? 1 : 0);
+  process.exitCode = fail ? 1 : 0;
 })();

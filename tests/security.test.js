@@ -2,7 +2,6 @@
 
 const { ORIGIN } = require("./origin");
 
-process.chdir("d:\\CodeAlpha Internship\\NovaCart");
 require("dotenv").config({ quiet: true, path: require("path").join(__dirname, "..", ".env") });
 
 let pass = 0, fail = 0;
@@ -111,5 +110,8 @@ const env = require("../server/utils/env");
   check("gap under 400ms (SMTP round-trip is off the request path)", gap < 400, `${gap}ms`);
 
   console.log(`\n${"=".repeat(52)}\n  ${pass} passed, ${fail} failed\n${"=".repeat(52)}`);
-  process.exit(fail ? 1 : 0);
+  // Setting exitCode and letting Node drain lets fetch's keep-alive sockets
+  // close on their own. Calling process.exit() here tears them down mid-close,
+  // which trips a libuv assertion on Windows and reports 127 on a green run.
+  process.exitCode = fail ? 1 : 0;
 })();
